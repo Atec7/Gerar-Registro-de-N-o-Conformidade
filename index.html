@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Não Conformidade - SGT</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+      background-color: rgb(244, 244, 244);
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .form-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .form-row input, .form-row select {
+      flex: 1;
+      padding: 10px;
+      font-size: 14px;
+    }
+    button {
+      color: white;
+      padding: 10px 20px;
+      margin-top: 10px;
+      font-size: 14px;
+      cursor: pointer;
+      background-color: blue;
+      border-radius: 10px;
+      border-color: white;
+    }
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+      background: #fff;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      font-size: 13px;
+      text-align: left;
+    }
+    th {
+      background-color: #e8e8e8;
+    }
+    .contador {
+      font-weight: bold;
+      margin-top: 20px;
+    }
+    #relatorio {
+      background: #fff;
+      padding: 20px;
+      width: 800px;
+      margin: auto;
+      border: 2px solid #000;
+    }
+    #relatorio h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .logo {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .rodape {
+      text-align: center;
+      font-size: 12px;
+      margin-top: 30px;
+      border-top: 1px solid #ccc;
+      padding-top: 10px;
+    }
+    #filtro {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    p{
+      text-align: center;
+      font-size: 13px;
+    }
+    p :hover{
+      color: green;
+    }
+    ::placeholder{
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Gerar<br>Registro de Não Conformidade</h1>
+  <p><i>Arnaldo S. Lima - todos os direitos reservados 2025</i></p>
+  <form id="form">
+    <div class="form-row">
+      <input type="text" id="ss" placeholder="SS" required />
+      <input type="text" id="data" placeholder="Data" required />
+      <input type="text" id="equipe" placeholder="Equipe" required />
+    </div>
+    <div class="form-row">
+      <input type="text" id="endereco" placeholder="Endereço" required />
+      <input type="text" id="local" placeholder="Local da Execução" required />
+      <select id="supervisor" required>
+        <option value="">Supervisor</option>
+        <option value="ACACIO SOUZA">ACACIO SOUZA</option>
+        <option value="JOSE VICTOR">JOSE VICTOR</option>
+        <option value="LEANDRO FREITAS">LEANDRO FREITAS</option>
+        <option value="RODRIGO COSTA">RODRIGO COSTA</option>
+        <option value="GUSTAVO SAVIANE">GUSTAVO SAVIANE</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <input type="text" id="strike" placeholder="Strike" required />
+      <input type="text" id="servicos" placeholder="Serviços" required />
+      <input type="text" id="orientacao" placeholder="Orientação do I&P" required />
+    </div>
+    <div class="form-row">
+      <input type="text" id="os" placeholder="Ordem de Serviço" required />
+      <input type="text" id="rejeicao" placeholder="Rejeição da Equatorial" required />
+      <input type="text" id="valor" placeholder="Valor do Serviço" required />
+    </div>
+    <div class="form-row">
+      <input type="text" id="vencimento" placeholder="Data de Vencimento (DD/MM/AAAA)" required />
+      <input type="text" id="referencia" placeholder="Nº Poste/Trafo/Posto/Referência" required />
+    </div>
+    <button type="submit">Registrar</button>
+    <button type="button" onclick="exportarRegistros()">Exportar Registros</button>
+    <button type="button" onclick="limparRegistros()">Limpar Registros</button>
+  </form>
+
+  <div id="filtro">
+    <input type="text" id="filtroVencimento" placeholder="Filtrar Vencimento" />
+    <button onclick="filtrarPorData()">Aplicar Filtro</button>
+    <button onclick="atualizarTabela()">Limpar Filtro</button>
+  </div>
+
+  <div class="contador">Total de registros: <span id="total">0</span></div>
+
+  <table id="tabela">
+    <thead>
+      <tr>
+        <th>SS</th><th>Data</th><th>Equipe</th><th>Endereço</th><th>Execução</th>
+        <th>Supervisor</th><th>Strike</th><th>Serviços</th><th>Orientação do I&P</th>
+        <th>OS</th><th>Rejeição</th><th>Valor</th><th>Vencimento</th><th>Referência</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <!-- Pré-visualização da Imagem -->
+  <div id="previewImage" style="display:none;"></div>
+
+  <!-- Relatório para gerar imagem -->
+  <div id="relatorio" style="display:none;">
+    <div class="logo">
+      <img src="https://via.placeholder.com/200x60?text=LOGO" alt="Logo da Empresa" />
+    </div>
+    <h2>RELATÓRIO DE NÃO CONFORMIDADE</h2>
+    <div id="relatorio-conteudo"></div>
+    <div class="rodape">
+      <p>Relatório gerado em: <span id="dataRelatorio"></span></p>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script>
+    const form = document.getElementById('form');
+    const tabela = document.querySelector('#tabela tbody');
+    const totalSpan = document.getElementById('total');
+    const filtroInput = document.getElementById('filtroVencimento');
+
+    let registros = JSON.parse(localStorage.getItem('registros')) || [];
+
+    function atualizarTabela(filtrados = null) {
+      const dados = filtrados || registros;
+      tabela.innerHTML = '';
+      dados.forEach(reg => {
+        const tr = document.createElement('tr');
+        Object.values(reg).forEach(val => {
+          const td = document.createElement('td');
+          td.textContent = val;
+          tr.appendChild(td);
+        });
+        tabela.appendChild(tr);
+      });
+      totalSpan.textContent = dados.length;
+    }
+
+    function gerarImagem(registro) {
+      const conteudo = `
+        <p><strong>SS:</strong> ${registro.ss}</p>
+        <p><strong>Data:</strong> ${registro.data}</p>
+        <p><strong>Equipe:</strong> ${registro.equipe}</p>
+        <p><strong>Endereço:</strong> ${registro.endereco}</p>
+        <p><strong>Local da Execução:</strong> ${registro.local}</p>
+        <p><strong>Supervisor:</strong> ${registro.supervisor}</p>
+        <p><strong>Strike:</strong> ${registro.strike}</p>
+        <p><strong>Serviços:</strong> ${registro.servicos}</p>
+        <p><strong>Orientação do I&P:</strong> ${registro.orientacao}</p>
+        <p><strong>Ordem de Serviço:</strong> ${registro.os}</p>
+        <p><strong>Rejeição da Equatorial:</strong> ${registro.rejeicao}</p>
+        <p><strong>Valor do Serviço:</strong> ${registro.valor}</p>
+        <p><strong>Data de Vencimento:</strong> ${registro.vencimento}</p>
+        <p><strong>Poste/Posto/Trafo/Referência:</strong> ${registro.referencia}</p>
+        <p>Gerencia de Serviços Técnicos e Comerciais & Informação e Performance<p>
+      `;
+      document.getElementById('relatorio-conteudo').innerHTML = conteudo;
+      document.getElementById('dataRelatorio').textContent = new Date().toLocaleString();
+      const relatorio = document.getElementById('relatorio');
+      relatorio.style.display = 'block';
+
+      setTimeout(() => {
+        html2canvas(relatorio, { scale: 3, useCORS: true }).then(canvas => {
+          const link = document.createElement('a');
+          link.download = `NÃO CONFORMIDADE SS ${registro.ss}.png`;
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+          relatorio.style.display = 'none';
+        });
+      }, 500);
+    }
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const registro = {
+        ss: form.ss.value,
+        data: form.data.value,
+        equipe: form.equipe.value,
+        endereco: form.endereco.value,
+        local: form.local.value,
+        supervisor: form.supervisor.value,
+        strike: form.strike.value,
+        servicos: form.servicos.value,
+        orientacao: form.orientacao.value,
+        os: form.os.value,
+        rejeicao: form.rejeicao.value,
+        valor: form.valor.value,
+        vencimento: form.vencimento.value,
+        referencia: form.referencia.value
+      };
+      registros.push(registro);
+      localStorage.setItem('registros', JSON.stringify(registros));
+      atualizarTabela();
+      gerarImagem(registro);
+      form.reset();
+    });
+
+    function exportarRegistros() {
+      const csv = registros.map(obj =>
+        `"${obj.ss}","${obj.data}","${obj.equipe}","${obj.endereco}","${obj.local}","${obj.supervisor}","${obj.strike}","${obj.servicos}","${obj.orientacao}","${obj.os}","${obj.rejeicao}","${obj.valor}","${obj.vencimento}","${obj.referencia}"`
+      ).join('\n');
+      const cabecalho = `"SS","Data","Equipe","Endereço","Execução","Supervisor","Strike","Serviços","Orientação do I&P","OS","Rejeição","Valor","Vencimento","Referência"\n`;
+      const blob = new Blob([cabecalho + csv], { type: 'text/csv' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'registros_nao_conformidade.csv';
+      link.click();
+    }
+
+    function limparRegistros() {
+      if (confirm('Deseja apagar todos os registros?')) {
+        registros = [];
+        localStorage.removeItem('registros');
+        atualizarTabela();
+      }
+    }
+
+    function filtrarPorData() {
+      const data = filtroInput.value.trim();
+      if (!data) return;
+      const filtrados = registros.filter(r => r.vencimento === data);
+      atualizarTabela(filtrados);
+    }
+
+    atualizarTabela();
+  </script>
+</body>
+</html>
