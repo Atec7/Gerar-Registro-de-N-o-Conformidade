@@ -51,7 +51,7 @@
     th {
       background-color: #e8e8e8;
     }
-    .contador {
+    .contador, .soma {
       font-weight: bold;
       margin-top: 20px;
     }
@@ -82,14 +82,14 @@
       display: flex;
       gap: 10px;
     }
-    p{
+    p {
       text-align: center;
       font-size: 13px;
     }
-    p :hover{
+    p :hover {
       color: green;
     }
-    ::placeholder{
+    ::placeholder {
       text-align: center;
     }
   </style>
@@ -98,6 +98,7 @@
 
   <h1>Gerar<br>Registro de Não Conformidade</h1>
   <p><i>Arnaldo S. Lima - todos os direitos reservados 2025</i></p>
+
   <form id="form">
     <div class="form-row">
       <input type="text" id="ss" placeholder="SS" required />
@@ -142,6 +143,7 @@
   </div>
 
   <div class="contador">Total de registros: <span id="total">0</span></div>
+  <div class="soma">Soma total dos serviços: R$ <span id="somaValorTotal">0,00</span></div>
 
   <table id="tabela">
     <thead>
@@ -154,10 +156,8 @@
     <tbody></tbody>
   </table>
 
-  <!-- Pré-visualização da Imagem -->
   <div id="previewImage" style="display:none;"></div>
 
-  <!-- Relatório para gerar imagem -->
   <div id="relatorio" style="display:none;">
     <div class="logo">
       <img src="https://via.placeholder.com/200x60?text=LOGO" alt="Logo da Empresa" />
@@ -175,12 +175,15 @@
     const tabela = document.querySelector('#tabela tbody');
     const totalSpan = document.getElementById('total');
     const filtroInput = document.getElementById('filtroVencimento');
+    const somaValorTotalSpan = document.getElementById('somaValorTotal');
 
     let registros = JSON.parse(localStorage.getItem('registros')) || [];
 
     function atualizarTabela(filtrados = null) {
       const dados = filtrados || registros;
       tabela.innerHTML = '';
+      let soma = 0;
+
       dados.forEach(reg => {
         const tr = document.createElement('tr');
         Object.values(reg).forEach(val => {
@@ -189,8 +192,13 @@
           tr.appendChild(td);
         });
         tabela.appendChild(tr);
+
+        const valor = parseFloat(reg.valor.replace(',', '.'));
+        if (!isNaN(valor)) soma += valor;
       });
+
       totalSpan.textContent = dados.length;
+      somaValorTotalSpan.textContent = soma.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
     function gerarImagem(registro) {
