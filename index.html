@@ -1,3 +1,4 @@
+<!-- CÓDIGO HTML COMPLETO COM CAMPO STATUS ATUALIZÁVEL -->
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -6,92 +7,130 @@
   <title>Não Conformidade - SGT</title>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      padding: 20px;
-      background-color: rgb(244, 244, 244);
-      color: #333;
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-    .form-row {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 10px;
-      flex-wrap: wrap;
-    }
-    .form-row input, .form-row select {
-      flex: 1;
-      padding: 10px;
-      font-size: 14px;
-    }
-    button {
-      color: white;
-      padding: 10px 20px;
-      margin-top: 10px;
-      font-size: 14px;
-      cursor: pointer;
-      background-color: blue;
-      border-radius: 10px;
-      border-color: white;
-    }
-    table {
-      width: 100%;
-      margin-top: 20px;
-      border-collapse: collapse;
-      background: #fff;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      font-size: 13px;
-      text-align: left;
-    }
-    th {
-      background-color: #e8e8e8;
-    }
-    .contador, .soma {
-      font-weight: bold;
-      margin-top: 20px;
-    }
-    #relatorio {
-      background: #fff;
-      padding: 20px;
-      width: 800px;
-      margin: auto;
-      border: 2px solid #000;
-    }
-    #relatorio h2 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .logo {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .rodape {
-      text-align: center;
-      font-size: 12px;
-      margin-top: 30px;
-      border-top: 1px solid #ccc;
-      padding-top: 10px;
-    }
-    #filtro {
-      margin-top: 20px;
-      display: flex;
-      gap: 10px;
-    }
-    p {
-      text-align: center;
-      font-size: 13px;
-    }
-    p :hover {
-      color: green;
-    }
-    ::placeholder {
-      text-align: center;
-    }
+  font-family: 'Segoe UI', sans-serif;
+  padding: 20px;
+  background-color: #f5f7fa;
+  color: #2c3e50;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 10px;
+  font-size: 26px;
+  color: #2c3e50;
+}
+
+p {
+  text-align: center;
+  font-size: 12px;
+  color: #888;
+}
+
+.form-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.form-row input,
+.form-row select {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+button {
+  background-color: #3498db;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+button:hover {
+  background-color: #2980b9;
+}
+
+#filtro {
+  margin-top: 25px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+#filtro input,
+#filtro select {
+  padding: 8px;
+  font-size: 13px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  min-width: 200px;
+}
+
+table {
+  width: 100%;
+  margin-top: 20px;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+th {
+  background-color: #ecf0f1;
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.contador, .soma {
+  font-weight: bold;
+  margin-top: 20px;
+  font-size: 14px;
+}
+
+#relatorio {
+  background: #fff;
+  padding: 25px;
+  width: 800px;
+  margin: auto;
+  border: 2px solid #000;
+  border-radius: 10px;
+}
+
+#relatorio h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.logo {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.rodape {
+  text-align: center;
+  font-size: 12px;
+  margin-top: 30px;
+  border-top: 1px solid #ccc;
+  padding-top: 10px;
+}
+
   </style>
 </head>
 <body>
@@ -136,11 +175,19 @@
     <button type="button" onclick="limparRegistros()">Limpar Registros</button>
   </form>
 
-  <div id="filtro">
-    <input type="text" id="filtroVencimento" placeholder="Filtrar Vencimento" />
-    <button onclick="filtrarPorData()">Aplicar Filtro</button>
-    <button onclick="atualizarTabela()">Limpar Filtro</button>
-  </div>
+<div id="filtro">
+  <input type="text" id="filtroVencimento" placeholder="Vencimento (DD/MM/AAAA)" />
+  <select id="filtroStatus">
+    <option value="">Todos os Status</option>
+    <option value="VALIDADA">VALIDADA</option>
+    <option value="REJEITADA">REJEITADA</option>
+    <option value="JUSTIFICADA">JUSTIFICADA</option>
+    <option value="INATIVADA">INATIVADA</option>
+  </select>
+  <button onclick="filtrarPorData()">Aplicar Filtro</button>
+  <button onclick="atualizarTabela()">Limpar Filtros</button>
+</div>
+
 
   <div class="contador">Total de registros: <span id="total">0</span></div>
   <div class="soma">Soma total dos serviços: R$ <span id="somaValorTotal">0,00</span></div>
@@ -150,13 +197,11 @@
       <tr>
         <th>SS</th><th>Data</th><th>Equipe</th><th>Endereço</th><th>Execução</th>
         <th>Supervisor</th><th>Strike</th><th>Serviços</th><th>Orientação do I&P</th>
-        <th>OS</th><th>Rejeição</th><th>Valor</th><th>Vencimento</th><th>Referência</th>
+        <th>OS</th><th>Rejeição</th><th>Valor</th><th>Vencimento</th><th>Referência</th><th>Status</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
-
-  <div id="previewImage" style="display:none;"></div>
 
   <div id="relatorio" style="display:none;">
     <div class="logo">
@@ -172,122 +217,179 @@
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
     const form = document.getElementById('form');
-    const tabela = document.querySelector('#tabela tbody');
-    const totalSpan = document.getElementById('total');
-    const filtroInput = document.getElementById('filtroVencimento');
-    const somaValorTotalSpan = document.getElementById('somaValorTotal');
+const tabela = document.querySelector('#tabela tbody');
+const totalSpan = document.getElementById('total');
+const somaValorTotalSpan = document.getElementById('somaValorTotal');
+const filtroVencimentoInput = document.getElementById('filtroVencimento');
+const filtroStatusSelect = document.getElementById('filtroStatus');
 
-    let registros = JSON.parse(localStorage.getItem('registros')) || [];
+let registros = JSON.parse(localStorage.getItem('registros')) || [];
 
-    function atualizarTabela(filtrados = null) {
-      const dados = filtrados || registros;
-      tabela.innerHTML = '';
-      let soma = 0;
+// Função para atualizar tabela com os registros (filtrados ou não)
+function atualizarTabela(filtrados = null) {
+  const dados = filtrados || registros;
+  tabela.innerHTML = '';
+  let soma = 0;
 
-      dados.forEach(reg => {
-        const tr = document.createElement('tr');
-        Object.values(reg).forEach(val => {
-          const td = document.createElement('td');
-          td.textContent = val;
-          tr.appendChild(td);
-        });
-        tabela.appendChild(tr);
-
-        const valor = parseFloat(reg.valor.replace(',', '.'));
-        if (!isNaN(valor)) soma += valor;
-      });
-
-      totalSpan.textContent = dados.length;
-      somaValorTotalSpan.textContent = soma.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    }
-
-    function gerarImagem(registro) {
-      const conteudo = `
-        <p><strong>SS:</strong> ${registro.ss}</p>
-        <p><strong>Data:</strong> ${registro.data}</p>
-        <p><strong>Equipe:</strong> ${registro.equipe}</p>
-        <p><strong>Endereço:</strong> ${registro.endereco}</p>
-        <p><strong>Local da Execução:</strong> ${registro.local}</p>
-        <p><strong>Supervisor:</strong> ${registro.supervisor}</p>
-        <p><strong>Strike:</strong> ${registro.strike}</p>
-        <p><strong>Serviços:</strong> ${registro.servicos}</p>
-        <p><strong>Orientação do I&P:</strong> ${registro.orientacao}</p>
-        <p><strong>Ordem de Serviço:</strong> ${registro.os}</p>
-        <p><strong>Rejeição da Equatorial:</strong> ${registro.rejeicao}</p>
-        <p><strong>Valor do Serviço:</strong> ${registro.valor}</p>
-        <p><strong>Data de Vencimento:</strong> ${registro.vencimento}</p>
-        <p><strong>Poste/Posto/Trafo/Referência:</strong> ${registro.referencia}</p>
-        <p>Gerencia de Serviços Técnicos e Comerciais & Informação e Performance<p>
-      `;
-      document.getElementById('relatorio-conteudo').innerHTML = conteudo;
-      document.getElementById('dataRelatorio').textContent = new Date().toLocaleString();
-      const relatorio = document.getElementById('relatorio');
-      relatorio.style.display = 'block';
-
-      setTimeout(() => {
-        html2canvas(relatorio, { scale: 3, useCORS: true }).then(canvas => {
-          const link = document.createElement('a');
-          link.download = `NÃO CONFORMIDADE SS ${registro.ss}.png`;
-          link.href = canvas.toDataURL('image/png');
-          link.click();
-          relatorio.style.display = 'none';
-        });
-      }, 500);
-    }
-
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      const registro = {
-        ss: form.ss.value,
-        data: form.data.value,
-        equipe: form.equipe.value,
-        endereco: form.endereco.value,
-        local: form.local.value,
-        supervisor: form.supervisor.value,
-        strike: form.strike.value,
-        servicos: form.servicos.value,
-        orientacao: form.orientacao.value,
-        os: form.os.value,
-        rejeicao: form.rejeicao.value,
-        valor: form.valor.value,
-        vencimento: form.vencimento.value,
-        referencia: form.referencia.value
-      };
-      registros.push(registro);
-      localStorage.setItem('registros', JSON.stringify(registros));
-      atualizarTabela();
-      gerarImagem(registro);
-      form.reset();
+  dados.forEach((reg, index) => {
+    const tr = document.createElement('tr');
+    // Adiciona todas as colunas menos status
+    ['ss','data','equipe','endereco','local','supervisor','strike','servicos','orientacao','os','rejeicao','valor','vencimento','referencia'].forEach(campo => {
+      const td = document.createElement('td');
+      td.textContent = reg[campo];
+      tr.appendChild(td);
     });
 
-    function exportarRegistros() {
-      const csv = registros.map(obj =>
-        `"${obj.ss}","${obj.data}","${obj.equipe}","${obj.endereco}","${obj.local}","${obj.supervisor}","${obj.strike}","${obj.servicos}","${obj.orientacao}","${obj.os}","${obj.rejeicao}","${obj.valor}","${obj.vencimento}","${obj.referencia}"`
-      ).join('\n');
-      const cabecalho = `"SS","Data","Equipe","Endereço","Execução","Supervisor","Strike","Serviços","Orientação do I&P","OS","Rejeição","Valor","Vencimento","Referência"\n`;
-      const blob = new Blob([cabecalho + csv], { type: 'text/csv' });
+    // Coluna status com select
+    const statusTd = document.createElement('td');
+    const select = document.createElement('select');
+    ['VALIDADA', 'REJEITADA', 'JUSTIFICADA', 'INATIVADA'].forEach(op => {
+      const option = document.createElement('option');
+      option.value = op;
+      option.textContent = op;
+      if (reg.status === op) option.selected = true;
+      select.appendChild(option);
+    });
+    select.addEventListener('change', () => {
+      reg.status = select.value;
+      localStorage.setItem('registros', JSON.stringify(registros));
+      // Atualiza filtro e soma ao mudar status
+      aplicarFiltros();
+    });
+    statusTd.appendChild(select);
+    tr.appendChild(statusTd);
+
+    tabela.appendChild(tr);
+
+    // Soma do valor (considerando vírgula decimal)
+    const valorNum = parseFloat(reg.valor.replace(',', '.'));
+    if (!isNaN(valorNum)) soma += valorNum;
+  });
+
+  totalSpan.textContent = dados.length;
+  somaValorTotalSpan.textContent = soma.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+// Função para gerar imagem do relatório
+function gerarImagem(registro) {
+  const conteudo = `
+    <p><strong>SS:</strong> ${registro.ss}</p>
+    <p><strong>Data:</strong> ${registro.data}</p>
+    <p><strong>Equipe:</strong> ${registro.equipe}</p>
+    <p><strong>Endereço:</strong> ${registro.endereco}</p>
+    <p><strong>Local da Execução:</strong> ${registro.local}</p>
+    <p><strong>Supervisor:</strong> ${registro.supervisor}</p>
+    <p><strong>Strike:</strong> ${registro.strike}</p>
+    <p><strong>Serviços:</strong> ${registro.servicos}</p>
+    <p><strong>Orientação do I&P:</strong> ${registro.orientacao}</p>
+    <p><strong>Ordem de Serviço:</strong> ${registro.os}</p>
+    <p><strong>Rejeição da Equatorial:</strong> ${registro.rejeicao}</p>
+    <p><strong>Valor do Serviço:</strong> ${registro.valor}</p>
+    <p><strong>Data de Vencimento:</strong> ${registro.vencimento}</p>
+    <p><strong>Poste/Posto/Trafo/Referência:</strong> ${registro.referencia}</p>
+    <p><strong>Status:</strong> ${registro.status}</p>
+    <p>Gerencia de Serviços Técnicos e Comerciais & Informação e Performance</p>
+  `;
+  document.getElementById('relatorio-conteudo').innerHTML = conteudo;
+  document.getElementById('dataRelatorio').textContent = new Date().toLocaleString();
+  const relatorio = document.getElementById('relatorio');
+  relatorio.style.display = 'block';
+
+  setTimeout(() => {
+    html2canvas(relatorio, { scale: 3, useCORS: true }).then(canvas => {
       const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = 'registros_nao_conformidade.csv';
+      link.download = `NÃO CONFORMIDADE SS ${registro.ss}.png`;
+      link.href = canvas.toDataURL('image/png');
       link.click();
-    }
+      relatorio.style.display = 'none';
+    });
+  }, 500);
+}
 
-    function limparRegistros() {
-      if (confirm('Deseja apagar todos os registros?')) {
-        registros = [];
-        localStorage.removeItem('registros');
-        atualizarTabela();
-      }
-    }
+// Evento submit do formulário para registrar novo registro
+form.addEventListener('submit', e => {
+  e.preventDefault();
 
-    function filtrarPorData() {
-      const data = filtroInput.value.trim();
-      if (!data) return;
-      const filtrados = registros.filter(r => r.vencimento === data);
-      atualizarTabela(filtrados);
-    }
+  const registro = {
+    ss: form.ss.value.trim(),
+    data: form.data.value.trim(),
+    equipe: form.equipe.value.trim(),
+    endereco: form.endereco.value.trim(),
+    local: form.local.value.trim(),
+    supervisor: form.supervisor.value,
+    strike: form.strike.value.trim(),
+    servicos: form.servicos.value.trim(),
+    orientacao: form.orientacao.value.trim(),
+    os: form.os.value.trim(),
+    rejeicao: form.rejeicao.value.trim(),
+    valor: form.valor.value.trim(),
+    vencimento: form.vencimento.value.trim(),
+    referencia: form.referencia.value.trim(),
+    status: 'VALIDADA'
+  };
 
-    atualizarTabela();
+  registros.push(registro);
+  localStorage.setItem('registros', JSON.stringify(registros));
+  aplicarFiltros();
+  gerarImagem(registro);
+  form.reset();
+});
+
+// Exportar registros para CSV
+function exportarRegistros() {
+  const cabecalho = `"SS","Data","Equipe","Endereço","Execução","Supervisor","Strike","Serviços","Orientação do I&P","OS","Rejeição","Valor","Vencimento","Referência","Status"\n`;
+  const csv = registros.map(obj =>
+    `"${obj.ss}","${obj.data}","${obj.equipe}","${obj.endereco}","${obj.local}","${obj.supervisor}","${obj.strike}","${obj.servicos}","${obj.orientacao}","${obj.os}","${obj.rejeicao}","${obj.valor}","${obj.vencimento}","${obj.referencia}","${obj.status}"`
+  ).join('\n');
+
+  const blob = new Blob([cabecalho + csv], { type: 'text/csv' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'registros_nao_conformidade.csv';
+  link.click();
+}
+
+// Limpar todos os registros
+function limparRegistros() {
+  if (confirm('Deseja apagar todos os registros?')) {
+    registros = [];
+    localStorage.removeItem('registros');
+    aplicarFiltros();
+  }
+}
+
+// Aplica filtros na tabela conforme inputs
+function aplicarFiltros() {
+  let filtrados = registros;
+
+  const filtroVenc = filtroVencimentoInput.value.trim();
+  const filtroStatus = filtroStatusSelect.value;
+
+  // Filtrar por vencimento (exato)
+  if (filtroVenc) {
+    filtrados = filtrados.filter(r => r.vencimento === filtroVenc);
+  }
+
+  // Filtrar por status
+  if (filtroStatus) {
+    filtrados = filtrados.filter(r => r.status === filtroStatus);
+  }
+
+  atualizarTabela(filtrados);
+}
+
+// Botões para filtro
+document.querySelector('#filtro button:nth-child(3)').addEventListener('click', aplicarFiltros); // Aplicar filtro
+document.querySelector('#filtro button:nth-child(4)').addEventListener('click', () => {
+  filtroVencimentoInput.value = '';
+  filtroStatusSelect.value = '';
+  aplicarFiltros();
+});
+
+// Inicializa tabela na abertura
+atualizarTabela();
+
   </script>
 </body>
-</html>
+                                </html>
+                                
