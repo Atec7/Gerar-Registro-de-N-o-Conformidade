@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>🚨Não Conformidade - SGT🚨</title>
+  <title>Não Conformidade - SGT</title>
   <style>
     body {
   font-family: 'Segoe UI', sans-serif;
@@ -130,6 +130,22 @@ th {
   border-top: 1px solid #ccc;
   padding-top: 10px;
 }
+#kpi {
+  margin-top: 20px;
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 8px rgba(0,0,0,0.08);
+}
+#kpi div {
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: #2c3e50;
+}
+#kpi ul {
+  padding-left: 20px;
+}
+
 
   </style>
 </head>
@@ -154,7 +170,6 @@ th {
         <option value="LEANDRO FREITAS">LEANDRO FREITAS</option>
         <option value="RODRIGO COSTA">RODRIGO COSTA</option>
         <option value="GUSTAVO SAVIANE">GUSTAVO SAVIANE</option>
-        <option value="FERNANDO VENCESLAU">FERNANDO VENCESLAU</option>
       </select>
     </div>
     <div class="form-row">
@@ -203,6 +218,13 @@ th {
     </thead>
     <tbody></tbody>
   </table>
+<h2 style="margin-top: 40px;">📊 Indicadores (KPI)</h2>
+<div id="kpi">
+  <div id="equipesMaisOfensoras"></div>
+  <div id="errosPorDia"></div>
+  <div id="valorRisco"></div>
+  <div id="rankingSupervisores"></div>
+</div>
 
   <div id="relatorio" style="display:none;">
     <div class="logo">
@@ -389,8 +411,55 @@ document.querySelector('#filtro button:nth-child(4)').addEventListener('click', 
 
 // Inicializa tabela na abertura
 atualizarTabela();
+function gerarKPIs(dados = registros) {
+  const equipesContagem = {};
+  const errosPorDia = {};
+  const supervisoresContagem = {};
+  let valorRisco = 0;
+
+  dados.forEach(r => {
+    // Equipe
+    equipesContagem[r.equipe] = (equipesContagem[r.equipe] || 0) + 1;
+
+    // Dia
+    errosPorDia[r.data] = (errosPorDia[r.data] || 0) + 1;
+
+    // Supervisor
+    supervisoresContagem[r.supervisor] = (supervisoresContagem[r.supervisor] || 0) + 1;
+
+    // Valor em risco (se não for VALIDADA)
+    if (r.status !== "VALIDADA") {
+      const val = parseFloat(r.valor.replace(',', '.'));
+      if (!isNaN(val)) valorRisco += val;
+    }
+  });
+
+  // Equipes mais ofensoras
+  const equipesHTML = Object.entries(equipesContagem)
+    .sort((a,b) => b[1]-a[1])
+    .map(([equipe, qtd]) => `<li>${equipe}: ${qtd} registros</li>`)
+    .join('');
+  document.getElementById('equipesMaisOfensoras').innerHTML = `<h4>📌 Equipes com mais registros:</h4><ul>${equipesHTML}</ul>`;
+
+  // Erros por dia
+  const errosDiaHTML = Object.entries(errosPorDia)
+    .sort((a,b) => b[1]-a[1])
+    .map(([data, qtd]) => `<li>${data}: ${qtd} erros</li>`)
+    .join('');
+  document.getElementById('errosPorDia').innerHTML = `<h4>📆 Total de erros por dia:</h4><ul>${errosDiaHTML}</ul>`;
+
+  // Valor em risco
+  document.getElementById('valorRisco').innerHTML = `<h4>⚠️ Valor total em risco (não validado):</h4><p style="font-weight: bold; color: red;">R$ ${valorRisco.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>`;
+
+  // Ranking supervisores
+  const rankingHTML = Object.entries(supervisoresContagem)
+    .sort((a,b) => b[1]-a[1])
+    .map(([sup, qtd]) => `<li>${sup}: ${qtd} registros</li>`)
+    .join('');
+  document.getElementById('rankingSupervisores').innerHTML = `<h4>👤 Ranking de supervisores:</h4><ul>${rankingHTML}</ul>`;
+}
 
   </script>
 </body>
-                                </html>
-                                
+  </html>
+  
