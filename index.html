@@ -236,10 +236,9 @@ th {
       <p>Relatório gerado em: <span id="dataRelatorio"></span></p>
     </div>
   </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script>
-    const form = document.getElementById('form');
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+const form = document.getElementById('form');
 const tabela = document.querySelector('#tabela tbody');
 const totalSpan = document.getElementById('total');
 const somaValorTotalSpan = document.getElementById('somaValorTotal');
@@ -248,7 +247,7 @@ const filtroStatusSelect = document.getElementById('filtroStatus');
 
 let registros = JSON.parse(localStorage.getItem('registros')) || [];
 
-// Função para atualizar tabela com os registros (filtrados ou não)
+// Atualiza a tabela e chama os KPIs
 function atualizarTabela(filtrados = null) {
   const dados = filtrados || registros;
   tabela.innerHTML = '';
@@ -256,14 +255,12 @@ function atualizarTabela(filtrados = null) {
 
   dados.forEach((reg, index) => {
     const tr = document.createElement('tr');
-    // Adiciona todas as colunas menos status
     ['ss','data','equipe','endereco','local','supervisor','strike','servicos','orientacao','os','rejeicao','valor','vencimento','referencia'].forEach(campo => {
       const td = document.createElement('td');
       td.textContent = reg[campo];
       tr.appendChild(td);
     });
 
-    // Coluna status com select
     const statusTd = document.createElement('td');
     const select = document.createElement('select');
     ['VALIDADA', 'REJEITADA', 'JUSTIFICADA', 'INATIVADA'].forEach(op => {
@@ -276,7 +273,6 @@ function atualizarTabela(filtrados = null) {
     select.addEventListener('change', () => {
       reg.status = select.value;
       localStorage.setItem('registros', JSON.stringify(registros));
-      // Atualiza filtro e soma ao mudar status
       aplicarFiltros();
     });
     statusTd.appendChild(select);
@@ -284,16 +280,16 @@ function atualizarTabela(filtrados = null) {
 
     tabela.appendChild(tr);
 
-    // Soma do valor (considerando vírgula decimal)
     const valorNum = parseFloat(reg.valor.replace(',', '.'));
     if (!isNaN(valorNum)) soma += valorNum;
   });
 
   totalSpan.textContent = dados.length;
   somaValorTotalSpan.textContent = soma.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+  gerarKPIs(dados); // 🔥 Chamada corrigida aqui
 }
 
-// Função para gerar imagem do relatório
 function gerarImagem(registro) {
   const conteudo = `
     <p><strong>SS:</strong> ${registro.ss}</p>
@@ -329,7 +325,6 @@ function gerarImagem(registro) {
   }, 500);
 }
 
-// Evento submit do formulário para registrar novo registro
 form.addEventListener('submit', e => {
   e.preventDefault();
 
@@ -358,7 +353,6 @@ form.addEventListener('submit', e => {
   form.reset();
 });
 
-// Exportar registros para CSV
 function exportarRegistros() {
   const cabecalho = `"SS","Data","Equipe","Endereço","Execução","Supervisor","Strike","Serviços","Orientação do I&P","OS","Rejeição","Valor","Vencimento","Referência","Status"\n`;
   const csv = registros.map(obj =>
@@ -372,7 +366,6 @@ function exportarRegistros() {
   link.click();
 }
 
-// Limpar todos os registros
 function limparRegistros() {
   if (confirm('Deseja apagar todos os registros?')) {
     registros = [];
@@ -381,19 +374,16 @@ function limparRegistros() {
   }
 }
 
-// Aplica filtros na tabela conforme inputs
 function aplicarFiltros() {
   let filtrados = registros;
 
   const filtroVenc = filtroVencimentoInput.value.trim();
   const filtroStatus = filtroStatusSelect.value;
 
-  // Filtrar por vencimento (exato)
   if (filtroVenc) {
     filtrados = filtrados.filter(r => r.vencimento === filtroVenc);
   }
 
-  // Filtrar por status
   if (filtroStatus) {
     filtrados = filtrados.filter(r => r.status === filtroStatus);
   }
@@ -401,16 +391,14 @@ function aplicarFiltros() {
   atualizarTabela(filtrados);
 }
 
-// Botões para filtro
-document.querySelector('#filtro button:nth-child(3)').addEventListener('click', aplicarFiltros); // Aplicar filtro
+// Botões de filtro
+document.querySelector('#filtro button:nth-child(3)').addEventListener('click', aplicarFiltros);
 document.querySelector('#filtro button:nth-child(4)').addEventListener('click', () => {
   filtroVencimentoInput.value = '';
   filtroStatusSelect.value = '';
   aplicarFiltros();
 });
 
-// Inicializa tabela na abertura
-atualizarTabela();
 function gerarKPIs(dados = registros) {
   const equipesContagem = {};
   const errosPorDia = {};
@@ -418,40 +406,30 @@ function gerarKPIs(dados = registros) {
   let valorRisco = 0;
 
   dados.forEach(r => {
-    // Equipe
     equipesContagem[r.equipe] = (equipesContagem[r.equipe] || 0) + 1;
-
-    // Dia
     errosPorDia[r.data] = (errosPorDia[r.data] || 0) + 1;
-
-    // Supervisor
     supervisoresContagem[r.supervisor] = (supervisoresContagem[r.supervisor] || 0) + 1;
 
-    // Valor em risco (se não for VALIDADA)
     if (r.status !== "VALIDADA") {
       const val = parseFloat(r.valor.replace(',', '.'));
       if (!isNaN(val)) valorRisco += val;
     }
   });
 
-  // Equipes mais ofensoras
   const equipesHTML = Object.entries(equipesContagem)
     .sort((a,b) => b[1]-a[1])
     .map(([equipe, qtd]) => `<li>${equipe}: ${qtd} registros</li>`)
     .join('');
   document.getElementById('equipesMaisOfensoras').innerHTML = `<h4>📌 Equipes com mais registros:</h4><ul>${equipesHTML}</ul>`;
 
-  // Erros por dia
   const errosDiaHTML = Object.entries(errosPorDia)
     .sort((a,b) => b[1]-a[1])
     .map(([data, qtd]) => `<li>${data}: ${qtd} erros</li>`)
     .join('');
   document.getElementById('errosPorDia').innerHTML = `<h4>📆 Total de erros por dia:</h4><ul>${errosDiaHTML}</ul>`;
 
-  // Valor em risco
   document.getElementById('valorRisco').innerHTML = `<h4>⚠️ Valor total em risco (não validado):</h4><p style="font-weight: bold; color: red;">R$ ${valorRisco.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>`;
 
-  // Ranking supervisores
   const rankingHTML = Object.entries(supervisoresContagem)
     .sort((a,b) => b[1]-a[1])
     .map(([sup, qtd]) => `<li>${sup}: ${qtd} registros</li>`)
@@ -459,7 +437,10 @@ function gerarKPIs(dados = registros) {
   document.getElementById('rankingSupervisores').innerHTML = `<h4>👤 Ranking de supervisores:</h4><ul>${rankingHTML}</ul>`;
 }
 
-  </script>
+// Inicializa a tabela e os KPIs ao carregar a página
+atualizarTabela();
+</script>
+
 </body>
   </html>
   
