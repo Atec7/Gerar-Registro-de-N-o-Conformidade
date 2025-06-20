@@ -266,7 +266,7 @@ function atualizarTabela(filtrados = null) {
 
     const statusTd = document.createElement('td');
     const select = document.createElement('select');
-    ['VALIDADA', 'REJEITADA', 'JUSTIFICADA', 'INATIVADA'].forEach(op => {
+    ['❌ATRIBUÍDA❌','VALIDADA', 'REJEITADA', 'JUSTIFICADA', 'INATIVADA'].forEach(op => {
       const option = document.createElement('option');
       option.value = op;
       option.textContent = op;
