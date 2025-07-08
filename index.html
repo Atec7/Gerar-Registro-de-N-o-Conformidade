@@ -1,4 +1,3 @@
-<!-- CÓDIGO HTML COMPLETO COM CAMPO STATUS ATUALIZÁVEL -->
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -157,8 +156,8 @@ th {
   <form id="form">
     <div class="form-row">
       <input type="text" id="ss" placeholder="SS" required />
-      <input type="text" id="data" placeholder="Data" required />
-      <input type="text" id="equipe" placeholder="Equipe" required />
+      <input type="text" id="data" placeholder="Data (DD/MM/AAAA)" required />
+      <input type="text" id="equipe" placeholder="Equipe Sempre prefixo EQTL" required />
     </div>
     <div class="form-row">
       <input type="text" id="endereco" placeholder="Endereço" required />
@@ -196,7 +195,7 @@ th {
   <input type="text" id="filtroVencimento" placeholder="Vencimento (DD/MM/AAAA)" />
   <select id="filtroStatus">
     <option value="">Todos os Status</option>
-    <option value="ATRIBUÍDA">❌ATRIBUÍDA❌</option>
+    <option value="ATRIBUÍDA">ATRIBUÍDA</option>
     <option value="VALIDADA">VALIDADA</option>
     <option value="REJEITADA">REJEITADA</option>
     <option value="JUSTIFICADA">JUSTIFICADA</option>
