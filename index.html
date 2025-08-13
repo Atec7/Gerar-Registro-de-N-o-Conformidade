@@ -1,449 +1,743 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Não Conformidade - SGT</title>
-  <style>
-    body {
-  font-family: 'Segoe UI', sans-serif;
-  padding: 20px;
-  background-color: #f5f7fa;
-  color: #2c3e50;
-}
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Não Conformidade - SGT</title>
 
-h1 {
-  text-align: center;
-  margin-bottom: 10px;
-  font-size: 26px;
-  color: #2c3e50;
-}
+<!-- Libs corretas -->
+<script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 
-p {
-  text-align: center;
-  font-size: 12px;
-  color: #888;
+<style>
+:root{
+  --bg:#f5f7fa; --fg:#2c3e50; --card:#fff; --accent:#3498db; --accent-2:#2ecc71; --border:#d0d7de; --muted:#8aa0b3;
 }
-
-.form-row {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
+.dark{
+  --bg:#111; --fg:#e6edf3; --card:#1b1f24; --accent:#2980b9; --accent-2:#22c55e; --border:#30363d; --muted:#9aa8b5;
 }
-
-.form-row input,
-.form-row select {
-  flex: 1;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 14px;
-  background-color: #fff;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+*{box-sizing:border-box}
+body{
+  font-family:Segoe UI,system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  margin:0; padding:20px; background:var(--bg); color:var(--fg); transition:.2s;
 }
-
-button {
-  background-color: #3498db;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 20px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
+h1{margin:0 0 6px; text-align:center; font-size:26px}
+.subtitle{margin:0 0 16px; text-align:center; color:var(--muted); font-size:12px}
+.toolbar{display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:10px 0 18px}
+.btn{
+  background:var(--accent); color:#fff; border:none; border-radius:10px; padding:10px 14px; font-weight:600; cursor:pointer;
+  box-shadow:0 2px 10px rgba(0,0,0,.06);
 }
-
-button:hover {
-  background-color: #2980b9;
+.btn.secondary{ background:#6b7280 }
+.btn.warning{ background:#ef4444 }
+.btn.success{ background:var(--accent-2) }
+.btn:disabled{opacity:.6; cursor:not-allowed}
+input,select{
+  border:1px solid var(--border); background:var(--card); color:var(--fg); border-radius:10px; padding:10px; font-size:14px;
+  box-shadow:0 1px 2px rgba(0,0,0,.04) inset;
 }
-
-#filtro {
-  margin-top: 25px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
+.form-row{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px}
+.card{
+  background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px; box-shadow:0 2px 14px rgba(0,0,0,.05);
 }
-
-#filtro input,
-#filtro select {
-  padding: 8px;
-  font-size: 13px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  min-width: 200px;
+.table-wrap{overflow:auto; border-radius:12px; border:1px solid var(--border); background:var(--card)}
+table{width:100%; border-collapse:collapse; font-size:13px}
+th,td{padding:8px 10px; border-bottom:1px solid var(--border); vertical-align:top}
+th{
+  position:sticky; top:0; background:var(--card); font-weight:700; user-select:none; cursor:pointer;
 }
-
-table {
-  width: 100%;
-  margin-top: 20px;
-  border-collapse: collapse;
-  background: #fff;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+th.sortable:hover{background:rgba(0,0,0,.03)}
+tr:hover td{background:rgba(0,0,0,.02)}
+.badge{display:inline-block; padding:.2rem .5rem; border-radius:999px; font-weight:700; font-size:12px}
+.badge.validada{background:#dcfce7; color:#166534}
+.badge.rejeitada{background:#fee2e2; color:#991b1b}
+.badge.justificada{background:#fef9c3; color:#854d0e}
+.badge.inativada{background:#e5e7eb; color:#111827}
+.kpis{display:grid; grid-template-columns:repeat(2,minmax(260px,1fr)); gap:14px}
+.kpi-box{padding:10px}
+.grid-2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.small{font-size:12px; color:var(--muted)}
+.flex{display:flex; gap:8px; flex-wrap:wrap}
+.right{display:flex; justify-content:flex-end}
+.row-actions{display:flex; gap:6px}
+.toast{
+  position:fixed; bottom:18px; right:18px; background:var(--accent); color:#fff; padding:10px 14px; border-radius:10px;
+  box-shadow:0 6px 24px rgba(0,0,0,.2); display:none; z-index:9999; font-weight:700;
 }
-
-th, td {
-  border: 1px solid #ddd;
-  padding: 8px 10px;
-  font-size: 13px;
+.switch{display:inline-flex; align-items:center; gap:8px; cursor:pointer}
+.switch input{appearance:none; width:42px; height:24px; border-radius:999px; background:#cbd5e1; position:relative; outline:none; transition:.2s}
+.switch input:checked{background:#22c55e}
+.switch input::after{
+  content:""; width:18px; height:18px; background:#fff; border-radius:50%; position:absolute; top:3px; left:3px; transition:.2s;
 }
-
-th {
-  background-color: #ecf0f1;
-  font-weight: bold;
-  color: #2c3e50;
-}
-
-.contador, .soma {
-  font-weight: bold;
-  margin-top: 20px;
-  font-size: 14px;
-}
-
-#relatorio {
-  background: #fff;
-  padding: 25px;
-  width: 800px;
-  margin: auto;
-  border: 2px solid #000;
-  border-radius: 10px;
-}
-
-#relatorio h2 {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.logo {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.rodape {
-  text-align: center;
-  font-size: 12px;
-  margin-top: 30px;
-  border-top: 1px solid #ccc;
-  padding-top: 10px;
-}
-#kpi {
-  margin-top: 20px;
-  background: #fff;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 0 8px rgba(0,0,0,0.08);
-}
-#kpi div {
-  margin-bottom: 20px;
-  font-size: 14px;
-  color: #2c3e50;
-}
-#kpi ul {
-  padding-left: 20px;
-}
-
-
-  </style>
+.switch input:checked::after{left:21px}
+.helper{font-size:12px; color:var(--muted)}
+#relatorio{width:900px; margin:auto; background:#fff; color:#000; border:2px solid #000; border-radius:10px; padding:24px}
+#relatorio .logo{text-align:center; margin-bottom:12px}
+#relatorio h2{text-align:center; margin:8px 0 14px}
+#relatorio .rodape{text-align:center; margin-top:18px; padding-top:8px; border-top:1px solid #cbd5e1; font-size:12px}
+</style>
 </head>
 <body>
 
-  <h1>Gerar<br>Registro de Não Conformidade</h1>
-  <p><i>Arnaldo S. Lima - todos os direitos reservados 2025</i></p>
+<h1>Gerar Registro de Não Conformidade</h1>
+<p class="subtitle"><i>Arnaldo S. Lima — todos os direitos reservados 2025</i></p>
 
-  <form id="form">
-    <div class="form-row">
-      <input type="text" id="ss" placeholder="SS" required />
-      <input type="text" id="data" placeholder="Data (DD/MM/AAAA)" required />
-      <input type="text" id="equipe" placeholder="Equipe Sempre prefixo EQTL" required />
-    </div>
-    <div class="form-row">
-      <input type="text" id="endereco" placeholder="Endereço" required />
-      <input type="text" id="local" placeholder="Local da Execução" required />
-      <select id="supervisor" required>
-        <option value="">Supervisor</option>
-        <option value="ACACIO SOUZA">ACACIO SOUZA</option>
-        <option value="JOSE VICTOR">JOSE VICTOR</option>
-        <option value="LEANDRO FREITAS">LEANDRO FREITAS</option>
-        <option value="RODRIGO COSTA">RODRIGO COSTA</option>
-        <option value="GUSTAVO SAVIANE">GUSTAVO SAVIANE</option>
-        <option value="FERNANDO VENCESLAU">FERNANDO VENCESLAU</option>
-        <option value="ROMARIO PEREIRA">ROMARIO PEREIRA</option>
+<div class="toolbar">
+  <label class="switch">
+    <input id="chkTema" type="checkbox"><span>🌙 Tema escuro</span>
+  </label>
+  <label class="switch">
+    <input id="chkAutoRelatorio" type="checkbox" checked><span>📄 Gerar relatório ao salvar</span>
+  </label>
+  <button class="btn" id="btnExportCsv">Exportar CSV</button>
+  <button class="btn" id="btnBackup">Backup JSON</button>
+  <button class="btn" id="btnRestore">Restaurar JSON</button>
+  <button class="btn warning" id="btnLimpar">Limpar Tudo</button>
+</div>
+
+<form id="form" class="card">
+  <div class="form-row">
+    <input id="ss" placeholder="SS" required>
+    <input id="data" placeholder="Data (DD/MM/AAAA)" required>
+    <input id="equipe" placeholder="Equipe (prefixo EQTL)" required>
+  </div>
+  <div class="form-row">
+    <input id="endereco" placeholder="Endereço" required>
+    <input id="local" placeholder="Local da Execução" required>
+    <select id="supervisor" required>
+      <option value="">Supervisor</option>
+      <option>ACACIO SOUZA</option>
+      <option>JOSE VICTOR</option>
+      <option>LEANDRO FREITAS</option>
+      <option>RODRIGO COSTA</option>
+      <option>GUSTAVO SAVIANE</option>
+      <option>FERNANDO VENCESLAU</option>
+      <option>ROMARIO PEREIRA</option>
+    </select>
+  </div>
+  <div class="form-row">
+    <input id="strike" placeholder="Strike" required>
+    <input id="servicos" placeholder="Serviços" required>
+    <input id="orientacao" placeholder="Orientação do I&P" required>
+  </div>
+  <div class="form-row">
+    <input id="os" placeholder="Ordem de Serviço" required>
+    <input id="rejeicao" placeholder="Rejeição da Equatorial" required>
+    <input id="valor" placeholder="Valor do Serviço (ex: 1234,56)" required>
+  </div>
+  <div class="form-row">
+    <input id="vencimento" placeholder="Data de Vencimento (DD/MM/AAAA)" required>
+    <input id="referencia" placeholder="Nº Poste/Trafo/Posto/Referência" required>
+  </div>
+  <div class="right">
+    <button class="btn success" type="submit">Registrar</button>
+  </div>
+  <div class="helper">Todos os campos são obrigatórios. Datas: DD/MM/AAAA. Valor: 0,00</div>
+</form>
+
+<div class="card">
+  <div class="grid-2">
+    <div class="flex">
+      <input id="busca" placeholder="🔎 Buscar em todos os campos...">
+      <input id="dataInicio" placeholder="Data início (DD/MM/AAAA)">
+      <input id="dataFim" placeholder="Data fim (DD/MM/AAAA)">
+      <select id="filtroStatus">
+        <option value="">Todos os Status</option>
+        <option value="VALIDADA">VALIDADA</option>
+        <option value="REJEITADA">REJEITADA</option>
+        <option value="JUSTIFICADA">JUSTIFICADA</option>
+        <option value="INATIVADA">INATIVADA</option>
       </select>
     </div>
-    <div class="form-row">
-      <input type="text" id="strike" placeholder="Strike" required />
-      <input type="text" id="servicos" placeholder="Serviços" required />
-      <input type="text" id="orientacao" placeholder="Orientação do I&P" required />
-    </div>
-    <div class="form-row">
-      <input type="text" id="os" placeholder="Ordem de Serviço" required />
-      <input type="text" id="rejeicao" placeholder="Rejeição da Equatorial" required />
-      <input type="text" id="valor" placeholder="Valor do Serviço" required />
-    </div>
-    <div class="form-row">
-      <input type="text" id="vencimento" placeholder="Data de Vencimento (DD/MM/AAAA)" required />
-      <input type="text" id="referencia" placeholder="Nº Poste/Trafo/Posto/Referência" required />
-    </div>
-    <button type="submit">Registrar</button>
-    <button type="button" onclick="exportarRegistros()">Exportar Registros</button>
-    <button type="button" onclick="limparRegistros()">Limpar Registros</button>
-  </form>
-
-<div id="filtro">
-  <input type="text" id="filtroVencimento" placeholder="Vencimento (DD/MM/AAAA)" />
-  <select id="filtroStatus">
-    <option value="">Todos os Status</option>
-    <option value="ATRIBUÍDA">ATRIBUÍDA</option>
-    <option value="VALIDADA">VALIDADA</option>
-    <option value="REJEITADA">REJEITADA</option>
-    <option value="JUSTIFICADA">JUSTIFICADA</option>
-    <option value="INATIVADA">INATIVADA</option>
-    
-  </select>
-  <button onclick="filtrarPorData()">Aplicar Filtro</button>
-  <button onclick="atualizarTabela()">Limpar Filtros</button>
-</div>
-
-
-  <div class="contador">Total de registros: <span id="total">0</span></div>
-  <div class="soma">Soma total dos serviços: R$ <span id="somaValorTotal">0,00</span></div>
-
-  <table id="tabela">
-    <thead>
-      <tr>
-        <th>SS</th><th>Data</th><th>Equipe</th><th>Endereço</th><th>Execução</th>
-        <th>Supervisor</th><th>Strike</th><th>Serviços</th><th>Orientação do I&P</th>
-        <th>OS</th><th>Rejeição</th><th>Valor</th><th>Vencimento</th><th>Referência</th><th>Status</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-<h2 style="margin-top: 40px;">📊 Indicadores (KPI)</h2>
-<div id="kpi">
-  <div id="equipesMaisOfensoras"></div>
-  <div id="errosPorDia"></div>
-  <div id="valorRisco"></div>
-  <div id="rankingSupervisores"></div>
-</div>
-
-  <div id="relatorio" style="display:none;">
-    <div class="logo">
-      <img src="https://via.placeholder.com/200x60?text=LOGO" alt="Logo da Empresa" />
-    </div>
-    <h2>RELATÓRIO DE NÃO CONFORMIDADE</h2>
-    <div id="relatorio-conteudo"></div>
-    <div class="rodape">
-      <p>Relatório gerado em: <span id="dataRelatorio"></span></p>
+    <div class="right small">
+      <div>Exibidos: <b id="totalExibidos">0</b> | Total geral: <b id="totalGeral">0</b></div>
     </div>
   </div>
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+  <div class="table-wrap" style="margin-top:10px">
+    <table id="tabela">
+      <thead>
+        <tr id="thead-row"></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="grid-2" style="margin-top:10px">
+    <div class="small">Soma dos valores exibidos: <b id="somaExibida">R$ 0,00</b></div>
+    <div class="small right">⚠️ Valor em risco (exibidos, não VALIDADA): <b id="valorRisco">R$ 0,00</b></div>
+  </div>
+</div>
+
+<h2 style="margin:18px 0 10px">📊 Indicadores (KPIs)</h2>
+<div class="kpis">
+  <div class="card kpi-box">
+    <canvas id="chartEquipes" height="150"></canvas>
+  </div>
+  <div class="card kpi-box">
+    <canvas id="chartStatus" height="150"></canvas>
+  </div>
+</div>
+
+<!-- Relatório (canvas) -->
+<div id="relatorio" class="card" style="display:none; background:#fff; color:#000">
+  <div class="logo">
+    <img src="https://via.placeholder.com/220x64?text=LOGO" alt="Logo da Empresa"/>
+  </div>
+  <h2>RELATÓRIO DE NÃO CONFORMIDADE</h2>
+  <div id="relatorio-conteudo"></div>
+  <div class="rodape">
+    <p>Relatório gerado em: <span id="dataRelatorio"></span></p>
+    <p>Gerência de Serviços Técnicos e Comerciais & Informação e Performance</p>
+  </div>
+</div>
+
+<div id="toast" class="toast">Pronto!</div>
+
 <script>
-const form = document.getElementById('form');
-const tabela = document.querySelector('#tabela tbody');
-const totalSpan = document.getElementById('total');
-const somaValorTotalSpan = document.getElementById('somaValorTotal');
-const filtroVencimentoInput = document.getElementById('filtroVencimento');
-const filtroStatusSelect = document.getElementById('filtroStatus');
+window.addEventListener('DOMContentLoaded', () => {
+  // ======= Modelo de colunas (ordem fixa) =======
+  const COLS = [
+    {key:'ss', label:'SS', type:'text'},
+    {key:'data', label:'Data', type:'date'},
+    {key:'equipe', label:'Equipe', type:'text'},
+    {key:'endereco', label:'Endereço', type:'text'},
+    {key:'local', label:'Execução', type:'text'},
+    {key:'supervisor', label:'Supervisor', type:'text'},
+    {key:'strike', label:'Strike', type:'text'},
+    {key:'servicos', label:'Serviços', type:'text'},
+    {key:'orientacao', label:'Orientação do I&P', type:'text'},
+    {key:'os', label:'OS', type:'text'},
+    {key:'rejeicao', label:'Rejeição', type:'text'},
+    {key:'valor', label:'Valor', type:'currency'},
+    {key:'vencimento', label:'Vencimento', type:'date'},
+    {key:'referencia', label:'Referência', type:'text'},
+    {key:'status', label:'Status', type:'status'}
+  ];
 
-let registros = JSON.parse(localStorage.getItem('registros')) || [];
+  // ======= Estado =======
+  let registros = loadLS('registros', []);
+  let sortKey = loadLS('sortKey', 'data');
+  let sortAsc = loadLS('sortAsc', true);
 
-// Atualiza a tabela e chama os KPIs
-function atualizarTabela(filtrados = null) {
-  const dados = filtrados || registros;
-  tabela.innerHTML = '';
-  let soma = 0;
-
-  dados.forEach((reg, index) => {
-    const tr = document.createElement('tr');
-    ['ss','data','equipe','endereco','local','supervisor','strike','servicos','orientacao','os','rejeicao','valor','vencimento','referencia'].forEach(campo => {
-      const td = document.createElement('td');
-      td.textContent = reg[campo];
-      tr.appendChild(td);
-    });
-
-    const statusTd = document.createElement('td');
-    const select = document.createElement('select');
-    ['❌ATRIBUÍDA❌','VALIDADA', 'REJEITADA', 'JUSTIFICADA', 'INATIVADA'].forEach(op => {
-      const option = document.createElement('option');
-      option.value = op;
-      option.textContent = op;
-      if (reg.status === op) option.selected = true;
-      select.appendChild(option);
-    });
-    select.addEventListener('change', () => {
-      reg.status = select.value;
-      localStorage.setItem('registros', JSON.stringify(registros));
-      aplicarFiltros();
-    });
-    statusTd.appendChild(select);
-    tr.appendChild(statusTd);
-
-    tabela.appendChild(tr);
-
-    const valorNum = parseFloat(reg.valor.replace(',', '.'));
-    if (!isNaN(valorNum)) soma += valorNum;
-  });
-
-  totalSpan.textContent = dados.length;
-  somaValorTotalSpan.textContent = soma.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
-  gerarKPIs(dados); // 🔥 Chamada corrigida aqui
-}
-
-function gerarImagem(registro) {
-  const conteudo = `
-    <p><strong>SS:</strong> ${registro.ss}</p>
-    <p><strong>Data:</strong> ${registro.data}</p>
-    <p><strong>Equipe:</strong> ${registro.equipe}</p>
-    <p><strong>Endereço:</strong> ${registro.endereco}</p>
-    <p><strong>Local da Execução:</strong> ${registro.local}</p>
-    <p><strong>Supervisor:</strong> ${registro.supervisor}</p>
-    <p><strong>Strike:</strong> ${registro.strike}</p>
-    <p><strong>Serviços:</strong> ${registro.servicos}</p>
-    <p><strong>Orientação do I&P:</strong> ${registro.orientacao}</p>
-    <p><strong>Ordem de Serviço:</strong> ${registro.os}</p>
-    <p><strong>Rejeição da Equatorial:</strong> ${registro.rejeicao}</p>
-    <p><strong>Valor do Serviço:</strong> ${registro.valor}</p>
-    <p><strong>Data de Vencimento:</strong> ${registro.vencimento}</p>
-    <p><strong>Poste/Posto/Trafo/Referência:</strong> ${registro.referencia}</p>
-    <p><strong>Status:</strong> ${registro.status}</p>
-    <p>Gerencia de Serviços Técnicos e Comerciais & Informação e Performance</p>
-  `;
-  document.getElementById('relatorio-conteudo').innerHTML = conteudo;
-  document.getElementById('dataRelatorio').textContent = new Date().toLocaleString();
-  const relatorio = document.getElementById('relatorio');
-  relatorio.style.display = 'block';
-
-  setTimeout(() => {
-    html2canvas(relatorio, { scale: 3, useCORS: true }).then(canvas => {
-      const link = document.createElement('a');
-      link.download = `NÃO CONFORMIDADE SS ${registro.ss}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-      relatorio.style.display = 'none';
-    });
-  }, 500);
-}
-
-form.addEventListener('submit', e => {
-  e.preventDefault();
-
-  const registro = {
-    ss: form.ss.value.trim(),
-    data: form.data.value.trim(),
-    equipe: form.equipe.value.trim(),
-    endereco: form.endereco.value.trim(),
-    local: form.local.value.trim(),
-    supervisor: form.supervisor.value,
-    strike: form.strike.value.trim(),
-    servicos: form.servicos.value.trim(),
-    orientacao: form.orientacao.value.trim(),
-    os: form.os.value.trim(),
-    rejeicao: form.rejeicao.value.trim(),
-    valor: form.valor.value.trim(),
-    vencimento: form.vencimento.value.trim(),
-    referencia: form.referencia.value.trim(),
-    status: 'VALIDADA'
+  const els = {
+    tbody: document.querySelector('#tabela tbody'),
+    theadRow: document.getElementById('thead-row'),
+    totalExibidos: document.getElementById('totalExibidos'),
+    totalGeral: document.getElementById('totalGeral'),
+    somaExibida: document.getElementById('somaExibida'),
+    valorRisco: document.getElementById('valorRisco'),
+    busca: document.getElementById('busca'),
+    dataInicio: document.getElementById('dataInicio'),
+    dataFim: document.getElementById('dataFim'),
+    filtroStatus: document.getElementById('filtroStatus'),
+    chkTema: document.getElementById('chkTema'),
+    chkAutoRelatorio: document.getElementById('chkAutoRelatorio'),
+    toast: document.getElementById('toast')
   };
 
-  registros.push(registro);
-  localStorage.setItem('registros', JSON.stringify(registros));
-  aplicarFiltros();
-  gerarImagem(registro);
-  form.reset();
-});
-
-function exportarRegistros() {
-  const cabecalho = `"SS","Data","Equipe","Endereço","Execução","Supervisor","Strike","Serviços","Orientação do I&P","OS","Rejeição","Valor","Vencimento","Referência","Status"\n`;
-  const csv = registros.map(obj =>
-    `"${obj.ss}","${obj.data}","${obj.equipe}","${obj.endereco}","${obj.local}","${obj.supervisor}","${obj.strike}","${obj.servicos}","${obj.orientacao}","${obj.os}","${obj.rejeicao}","${obj.valor}","${obj.vencimento}","${obj.referencia}","${obj.status}"`
-  ).join('\n');
-
-  const blob = new Blob([cabecalho + csv], { type: 'text/csv' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = 'registros_nao_conformidade.csv';
-  link.click();
-}
-
-function limparRegistros() {
-  if (confirm('Deseja apagar todos os registros?')) {
-    registros = [];
-    localStorage.removeItem('registros');
-    aplicarFiltros();
+  // Restaurar preferências
+  if(loadLS('tema', 'light') === 'dark') {
+    document.body.classList.add('dark');
+    els.chkTema.checked = true;
   }
-}
+  els.busca.value = loadLS('busca', '');
+  els.dataInicio.value = loadLS('dataInicio', '');
+  els.dataFim.value = loadLS('dataFim', '');
+  els.filtroStatus.value = loadLS('filtroStatus', '');
 
-function aplicarFiltros() {
-  let filtrados = registros;
+  // ======= Cabeçalho com sort =======
+  renderHeader();
 
-  const filtroVenc = filtroVencimentoInput.value.trim();
-  const filtroStatus = filtroStatusSelect.value;
+  // ======= Eventos básicos =======
+  document.getElementById('form').addEventListener('submit', onSubmit);
+  document.getElementById('btnExportCsv').addEventListener('click', exportCSV);
+  document.getElementById('btnBackup').addEventListener('click', backupJSON);
+  document.getElementById('btnRestore').addEventListener('click', restoreJSON);
+  document.getElementById('btnLimpar').addEventListener('click', limparTudo);
 
-  if (filtroVenc) {
-    filtrados = filtrados.filter(r => r.vencimento === filtroVenc);
-  }
-
-  if (filtroStatus) {
-    filtrados = filtrados.filter(r => r.status === filtroStatus);
-  }
-
-  atualizarTabela(filtrados);
-}
-
-// Botões de filtro
-document.querySelector('#filtro button:nth-child(3)').addEventListener('click', aplicarFiltros);
-document.querySelector('#filtro button:nth-child(4)').addEventListener('click', () => {
-  filtroVencimentoInput.value = '';
-  filtroStatusSelect.value = '';
-  aplicarFiltros();
-});
-
-function gerarKPIs(dados = registros) {
-  const equipesContagem = {};
-  const errosPorDia = {};
-  const supervisoresContagem = {};
-  let valorRisco = 0;
-
-  dados.forEach(r => {
-    equipesContagem[r.equipe] = (equipesContagem[r.equipe] || 0) + 1;
-    errosPorDia[r.data] = (errosPorDia[r.data] || 0) + 1;
-    supervisoresContagem[r.supervisor] = (supervisoresContagem[r.supervisor] || 0) + 1;
-
-    if (r.status !== "VALIDADA") {
-      const val = parseFloat(r.valor.replace(',', '.'));
-      if (!isNaN(val)) valorRisco += val;
-    }
+  els.busca.addEventListener('input', () => {
+    saveLS('busca', els.busca.value);
+    render();
   });
 
-  const equipesHTML = Object.entries(equipesContagem)
-    .sort((a,b) => b[1]-a[1])
-    .map(([equipe, qtd]) => `<li>${equipe}: ${qtd} registros</li>`)
-    .join('');
-  document.getElementById('equipesMaisOfensoras').innerHTML = `<h4>📌 Equipes com mais registros:</h4><ul>${equipesHTML}</ul>`;
+  [els.dataInicio, els.dataFim].forEach(input => {
+    input.addEventListener('input', () => {
+      saveLS(input.id, input.value);
+      render();
+    });
+  });
 
-  const errosDiaHTML = Object.entries(errosPorDia)
-    .sort((a,b) => b[1]-a[1])
-    .map(([data, qtd]) => `<li>${data}: ${qtd} erros</li>`)
-    .join('');
-  document.getElementById('errosPorDia').innerHTML = `<h4>📆 Total de erros por dia:</h4><ul>${errosDiaHTML}</ul>`;
+  els.filtroStatus.addEventListener('change', () => {
+    saveLS('filtroStatus', els.filtroStatus.value);
+    render();
+  });
 
-  document.getElementById('valorRisco').innerHTML = `<h4>⚠️ Valor total em risco (não validado):</h4><p style="font-weight: bold; color: red;">R$ ${valorRisco.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>`;
+  els.chkTema.addEventListener('change', () => {
+    document.body.classList.toggle('dark', els.chkTema.checked);
+    saveLS('tema', els.chkTema.checked ? 'dark' : 'light');
+  });
 
-  const rankingHTML = Object.entries(supervisoresContagem)
-    .sort((a,b) => b[1]-a[1])
-    .map(([sup, qtd]) => `<li>${sup}: ${qtd} registros</li>`)
-    .join('');
-  document.getElementById('rankingSupervisores').innerHTML = `<h4>👤 Ranking de supervisores:</h4><ul>${rankingHTML}</ul>`;
-}
+  // ======= Render inicial =======
+  render();
 
-// Inicializa a tabela e os KPIs ao carregar a página
-atualizarTabela();
+  // ======= Funções =======
+
+  function onSubmit(e) {
+    e.preventDefault();
+    const registro = readForm();
+    if (!registro) return;
+
+    registro.id = Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+    registro.status = 'VALIDADA';
+    registros.push(registro);
+    save(true);
+    e.target.reset();
+    toast('Registro adicionado!');
+
+    if (els.chkAutoRelatorio.checked) {
+      gerarRelatorio(registro);
+    }
+  }
+
+  function readForm() {
+    const get = id => document.getElementById(id).value.trim();
+    const r = {
+      ss: get('ss'),
+      data: normalizeDate(get('data')),
+      equipe: get('equipe'),
+      endereco: get('endereco'),
+      local: get('local'),
+      supervisor: get('supervisor'),
+      strike: get('strike'),
+      servicos: get('servicos'),
+      orientacao: get('orientacao'),
+      os: get('os'),
+      rejeicao: get('rejeicao'),
+      valor: normalizeBRL(get('valor')),
+      vencimento: normalizeDate(get('vencimento')),
+      referencia: get('referencia')
+    };
+
+    // Validação simples
+    const obrigatorios = Object.entries(r).filter(([k, v]) => !v || v === '');
+    if (obrigatorios.length) {
+      toast('Preencha todos os campos.');
+      return null;
+    }
+    if (!parseDateBR(r.data) || !parseDateBR(r.vencimento)) {
+      toast('Datas devem estar em DD/MM/AAAA.');
+      return null;
+    }
+    if (isNaN(parseBRL(r.valor))) {
+      toast('Valor inválido. Use formato 0,00');
+      return null;
+    }
+    return r;
+  }
+
+  function renderHeader() {
+    els.theadRow.innerHTML = '';
+    COLS.forEach(c => {
+      const th = document.createElement('th');
+      th.textContent = c.label;
+      th.classList.add('sortable');
+      th.style.cursor = 'pointer';
+      th.title = 'Clique para ordenar';
+      th.addEventListener('click', () => {
+        if (sortKey === c.key) {
+          sortAsc = !sortAsc;
+        } else {
+          sortKey = c.key;
+          sortAsc = true;
+        }
+        saveLS('sortKey', sortKey);
+        saveLS('sortAsc', sortAsc);
+        render();
+      });
+      els.theadRow.appendChild(th);
+    });
+    const thActions = document.createElement('th');
+    thActions.textContent = 'Ações';
+    els.theadRow.appendChild(thActions);
+  }
+
+  function getFiltered() {
+    let filtered = [...registros];
+    const q = (els.busca.value || '').toLowerCase();
+    const di = normalizeDate(els.dataInicio.value);
+    const df = normalizeDate(els.dataFim.value);
+    const fs = els.filtroStatus.value;
+
+    if (q) {
+      filtered = filtered.filter(r =>
+        COLS.some(c => String(r[c.key] || '').toLowerCase().includes(q))
+      );
+    }
+
+    if (di && parseDateBR(di)) {
+      const dMin = parseDateBR(di).getTime();
+      filtered = filtered.filter(r => {
+        const d = parseDateBR(r.data);
+        return d && d.getTime() >= dMin;
+      });
+    }
+
+    if (df && parseDateBR(df)) {
+      const dMax = parseDateBR(df).getTime();
+      filtered = filtered.filter(r => {
+        const d = parseDateBR(r.data);
+        return d && d.getTime() <= dMax;
+      });
+    }
+
+    if (fs) {
+      filtered = filtered.filter(r => r.status === fs);
+    }
+
+    filtered.sort((a, b) => compare(a, b, sortKey, sortAsc));
+    return filtered;
+  }
+
+  function render() {
+    const rows = getFiltered();
+    els.tbody.innerHTML = '';
+
+    rows.forEach(r => {
+      const tr = document.createElement('tr');
+
+      COLS.forEach(c => {
+        const td = document.createElement('td');
+
+        if (c.type === 'status') {
+          const sel = document.createElement('select');
+          ['VALIDADA','REJEITADA','JUSTIFICADA','INATIVADA'].forEach(op => {
+            const option = document.createElement('option');
+            option.value = op;
+            option.textContent = op;
+            if (r.status === op) option.selected = true;
+            sel.appendChild(option);
+          });
+          sel.addEventListener('change', () => {
+            r.status = sel.value;
+            save(false);
+            updateTotals(rows);
+            drawCharts();
+          });
+          td.appendChild(sel);
+        } else {
+          td.contentEditable = true;
+          td.spellcheck = false;
+          td.textContent = r[c.key];
+          td.addEventListener('blur', () => {
+            let v = td.textContent.trim();
+
+            if (c.type === 'currency') {
+              v = normalizeBRL(v);
+              if (isNaN(parseBRL(v))) {
+                toast('Valor inválido');
+                td.textContent = r[c.key];
+                return;
+              }
+            }
+
+            if (c.type === 'date') {
+              v = normalizeDate(v);
+              if (!parseDateBR(v)) {
+                toast('Data inválida');
+                td.textContent = r[c.key];
+                return;
+              }
+            }
+
+            r[c.key] = v;
+            save(false);
+
+            if (['valor', 'status', 'data'].includes(c.key)) {
+              updateTotals(rows);
+              drawCharts();
+            }
+          });
+          td.addEventListener('keydown', (e) => {
+            // Evitar quebra de linha em cells editáveis
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              td.blur();
+            }
+          });
+        }
+
+        tr.appendChild(td);
+      });
+
+      // Ações
+      const tdActions = document.createElement('td');
+      tdActions.className = 'row-actions';
+
+      const btnRelatorio = document.createElement('button');
+      btnRelatorio.type = 'button';
+      btnRelatorio.className = 'btn secondary';
+      btnRelatorio.textContent = '📄 Relatório';
+      btnRelatorio.title = 'Gerar relatório';
+      btnRelatorio.addEventListener('click', () => gerarRelatorio(r));
+
+      const btnExcluir = document.createElement('button');
+      btnExcluir.type = 'button';
+      btnExcluir.className = 'btn warning';
+      btnExcluir.textContent = '🗑️ Excluir';
+      btnExcluir.title = 'Excluir registro';
+      btnExcluir.addEventListener('click', () => excluir(r.id));
+
+      tdActions.appendChild(btnRelatorio);
+      tdActions.appendChild(btnExcluir);
+
+      tr.appendChild(tdActions);
+      els.tbody.appendChild(tr);
+    });
+
+    els.totalExibidos.textContent = rows.length;
+    els.totalGeral.textContent = registros.length;
+
+    updateTotals(rows);
+    drawCharts();
+  }
+
+  function updateTotals(rows) {
+    const soma = rows.reduce((acc, r) => acc + (parseBRL(r.valor) || 0), 0);
+    const risco = rows.reduce((acc, r) => r.status !== 'VALIDADA' ? acc + (parseBRL(r.valor) || 0) : acc, 0);
+    els.somaExibida.textContent = formatBRL(soma);
+    els.valorRisco.textContent = formatBRL(risco);
+  }
+
+  function excluir(id) {
+    if (!confirm('Deseja excluir este registro?')) return;
+    registros = registros.filter(r => r.id !== id);
+    save(true);
+    toast('Registro excluído!');
+  }
+
+  function exportCSV() {
+    if (!registros.length) {
+      toast('Nada para exportar');
+      return;
+    }
+    const header = COLS.map(c => `"${c.label}"`).join(',') + '\n';
+    const lines = registros.map(r =>
+      COLS.map(c => `"${String(r[c.key] ?? '').replace(/"/g, '""')}"`).join(',')
+    ).join('\n');
+
+    const blob = new Blob([header + lines], {type: 'text/csv;charset=utf-8;'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'registros_nao_conformidade.csv';
+    a.click();
+
+    toast('CSV exportado!');
+  }
+
+  function backupJSON() {
+    const blob = new Blob([JSON.stringify(registros, null, 2)], {type: 'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'backup_registros.json';
+    a.click();
+    toast('Backup gerado!');
+  }
+
+  function restoreJSON() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,application/json';
+
+    input.onchange = () => {
+      const fr = new FileReader();
+      fr.onload = () => {
+        try {
+          const data = JSON.parse(fr.result);
+          if (!Array.isArray(data)) throw new Error('JSON inválido');
+
+          data.forEach(d => {
+            if (!d.id) d.id = Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+          });
+
+          registros = data;
+          save(true);
+          toast('Backup restaurado!');
+        } catch (e) {
+          alert('Falha ao carregar JSON: ' + e.message);
+        }
+      };
+      fr.readAsText(input.files[0]);
+    };
+
+    input.click();
+  }
+
+  function limparTudo() {
+    if (!confirm('Tem certeza que deseja apagar TODOS os registros?')) return;
+    registros = [];
+    save(true);
+    toast('Tudo limpo!');
+  }
+
+  function gerarRelatorio(r) {
+    const html = `
+      <p><strong>SS:</strong> ${escapeHtml(r.ss)}</p>
+      <p><strong>Data:</strong> ${escapeHtml(r.data)}</p>
+      <p><strong>Equipe:</strong> ${escapeHtml(r.equipe)}</p>
+      <p><strong>Endereço:</strong> ${escapeHtml(r.endereco)}</p>
+      <p><strong>Local da Execução:</strong> ${escapeHtml(r.local)}</p>
+      <p><strong>Supervisor:</strong> ${escapeHtml(r.supervisor)}</p>
+      <p><strong>Strike:</strong> ${escapeHtml(r.strike)}</p>
+      <p><strong>Serviços:</strong> ${escapeHtml(r.servicos)}</p>
+      <p><strong>Orientação do I&P:</strong> ${escapeHtml(r.orientacao)}</p>
+      <p><strong>Ordem de Serviço:</strong> ${escapeHtml(r.os)}</p>
+      <p><strong>Rejeição da Equatorial:</strong> ${escapeHtml(r.rejeicao)}</p>
+      <p><strong>Valor do Serviço:</strong> ${formatBRL(parseBRL(r.valor))}</p>
+      <p><strong>Data de Vencimento:</strong> ${escapeHtml(r.vencimento)}</p>
+      <p><strong>Referência:</strong> ${escapeHtml(r.referencia)}</p>
+      <p><strong>Status:</strong> ${escapeHtml(r.status)}</p>
+    `;
+    const win = window.open('', '_blank', 'width=600,height=600,scrollbars=yes');
+    win.document.write(`
+      <html><head><title>Relatório de Não Conformidade</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        p { margin: 5px 0; }
+      </style>
+      </head><body>${html}</body></html>
+    `);
+    win.document.close();
+    win.focus();
+  }
+
+  // ======= Utils =======
+  function toast(msg) {
+    els.toast.textContent = msg;
+    els.toast.classList.add('show');
+    setTimeout(() => els.toast.classList.remove('show'), 3000);
+  }
+
+  function save(autoRender) {
+    saveLS('registros', registros);
+    if (autoRender) render();
+  }
+
+  function saveLS(key, val) {
+    localStorage.setItem(key, JSON.stringify(val));
+  }
+
+  function loadLS(key, defaultVal) {
+    try {
+      const val = localStorage.getItem(key);
+      return val ? JSON.parse(val) : defaultVal;
+    } catch {
+      return defaultVal;
+    }
+  }
+
+  // Formata e normaliza valores brasileiros
+
+  function normalizeBRL(v) {
+    if (!v) return '';
+    v = v.replace(/\s/g,'').replace(/[^\d,.-]/g,'').replace('.', '').replace(',', '.');
+    return v;
+  }
+
+  function parseBRL(v) {
+    if (!v) return 0;
+    v = String(v).replace(/\./g, '').replace(',', '.');
+    return parseFloat(v) || 0;
+  }
+
+  function formatBRL(v) {
+    return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  function normalizeDate(v) {
+    if (!v) return '';
+    // Aceita DD/MM/AAAA ou AAAA-MM-DD e converte para DD/MM/AAAA
+    if (v.includes('-')) {
+      const [yyyy, mm, dd] = v.split('-');
+      if (dd && mm && yyyy) return `${dd}/${mm}/${yyyy}`;
+    }
+    return v;
+  }
+
+  function parseDateBR(str) {
+    // Espera DD/MM/AAAA
+    if (!str) return null;
+    const parts = str.split('/');
+    if (parts.length !== 3) return null;
+    const d = parseInt(parts[0],10);
+    const m = parseInt(parts[1],10)-1;
+    const y = parseInt(parts[2],10);
+    if (isNaN(d) || isNaN(m) || isNaN(y)) return null;
+    return new Date(y,m,d);
+  }
+
+  function compare(a, b, key, asc) {
+    let va = a[key];
+    let vb = b[key];
+
+    if (key === 'valor') {
+      va = parseBRL(va);
+      vb = parseBRL(vb);
+    } else if (COLS.find(c => c.key === key)?.type === 'date') {
+      va = parseDateBR(va)?.getTime() || 0;
+      vb = parseDateBR(vb)?.getTime() || 0;
+    } else {
+      va = String(va || '').toLowerCase();
+      vb = String(vb || '').toLowerCase();
+    }
+
+    if (va < vb) return asc ? -1 : 1;
+    if (va > vb) return asc ? 1 : -1;
+    return 0;
+  }
+
+  function escapeHtml(text) {
+    if (!text) return '';
+    return text.replace(/&/g, '&amp;')
+               .replace(/</g, '&lt;')
+               .replace(/>/g, '&gt;')
+               .replace(/"/g, '&quot;')
+               .replace(/'/g, '&#039;');
+  }
+
+  // ====== Gráficos (utilizando Chart.js se disponível) ======
+  function drawCharts() {
+    // Seu código para desenhar gráficos aqui...
+    // Exemplo simplificado: somar valores por status
+    if (typeof Chart === 'undefined') return;
+
+    const ctxStatus = document.getElementById('chartStatus')?.getContext('2d');
+    if (!ctxStatus) return;
+
+    const statusMap = { 'VALIDADA':0, 'REJEITADA':0, 'JUSTIFICADA':0, 'INATIVADA':0 };
+    registros.forEach(r => {
+      if (statusMap.hasOwnProperty(r.status)) {
+        statusMap[r.status] += parseBRL(r.valor) || 0;
+      }
+    });
+
+    if (window.statusChart) window.statusChart.destroy();
+
+    window.statusChart = new Chart(ctxStatus, {
+      type: 'pie',
+      data: {
+        labels: Object.keys(statusMap),
+        datasets: [{
+          data: Object.values(statusMap),
+          backgroundColor: ['#4caf50','#f44336','#ff9800','#9e9e9e']
+        }]
+      },
+      options: { responsive:true }
+    });
+  }
+});
 </script>
 
 </body>
-  </html>
-  
+</html>
