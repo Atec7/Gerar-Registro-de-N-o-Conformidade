@@ -234,7 +234,8 @@ window.addEventListener('DOMContentLoaded', () => {
     filtroStatus: document.getElementById('filtroStatus'),
     chkTema: document.getElementById('chkTema'),
     chkAutoRelatorio: document.getElementById('chkAutoRelatorio'),
-    toast: document.getElementById('toast')
+    toast: document.getElementById('toast'),
+    btnRegistrar: document.getElementById('btnRegistrar')
   };
 
   // Restaurar preferências
@@ -250,93 +251,33 @@ window.addEventListener('DOMContentLoaded', () => {
   // ======= Cabeçalho com sort =======
   renderHeader();
 
-  // ======= Eventos básicos =======
-  document.getElementById('form').addEventListener('submit', onSubmit);
+  // ======= Eventos =======
   document.getElementById('btnExportCsv').addEventListener('click', exportCSV);
   document.getElementById('btnBackup').addEventListener('click', backupJSON);
   document.getElementById('btnRestore').addEventListener('click', restoreJSON);
   document.getElementById('btnLimpar').addEventListener('click', limparTudo);
 
-  els.busca.addEventListener('input', () => {
-    saveLS('busca', els.busca.value);
+  els.busca.addEventListener('input', () => { saveLS('busca', els.busca.value); render(); });
+  [els.dataInicio, els.dataFim].forEach(input => input.addEventListener('input', () => { saveLS(input.id, input.value); render(); }));
+  els.filtroStatus.addEventListener('change', () => { saveLS('filtroStatus', els.filtroStatus.value); render(); });
+  els.chkTema.addEventListener('change', () => { document.body.classList.toggle('dark', els.chkTema.checked); saveLS('tema', els.chkTema.checked ? 'dark' : 'light'); });
+
+  // ======= Botão Registrar =======
+  els.btnRegistrar.addEventListener('click', () => {
+    const r = readForm();
+    if(!r) return;
+    registros.push(r);
+    saveLS('registros', registros);
     render();
-  });
-
-  [els.dataInicio, els.dataFim].forEach(input => {
-    input.addEventListener('input', () => {
-      saveLS(input.id, input.value);
-      render();
-    });
-  });
-
-  els.filtroStatus.addEventListener('change', () => {
-    saveLS('filtroStatus', els.filtroStatus.value);
-    render();
-  });
-
-  els.chkTema.addEventListener('change', () => {
-    document.body.classList.toggle('dark', els.chkTema.checked);
-    saveLS('tema', els.chkTema.checked ? 'dark' : 'light');
+    gerarImagemRelatorio(r);
+    limparFormulario();
+    toast('Registro salvo e relatório gerado!');
   });
 
   // ======= Render inicial =======
   render();
 
   // ======= Funções =======
-
-  function onSubmit(e) {
-    e.preventDefault();
-    const registro = readForm();
-    if (!registro) return;
-
-    registro.id = Date.now().toString(36) + Math.random().toString(36).slice(2,7);
-    registro.status = 'VALIDADA';
-    registros.push(registro);
-    save(true);
-    e.target.reset();
-    toast('Registro adicionado!');
-
-    if (els.chkAutoRelatorio.checked) {
-      gerarRelatorio(registro);
-    }
-  }
-
-  function readForm() {
-    const get = id => document.getElementById(id).value.trim();
-    const r = {
-      ss: get('ss'),
-      data: normalizeDate(get('data')),
-      equipe: get('equipe'),
-      endereco: get('endereco'),
-      local: get('local'),
-      supervisor: get('supervisor'),
-      strike: get('strike'),
-      servicos: get('servicos'),
-      orientacao: get('orientacao'),
-      os: get('os'),
-      rejeicao: get('rejeicao'),
-      valor: normalizeBRL(get('valor')),
-      vencimento: normalizeDate(get('vencimento')),
-      referencia: get('referencia')
-    };
-
-    // Validação simples
-    const obrigatorios = Object.entries(r).filter(([k, v]) => !v || v === '');
-    if (obrigatorios.length) {
-      toast('Preencha todos os campos.');
-      return null;
-    }
-    if (!parseDateBR(r.data) || !parseDateBR(r.vencimento)) {
-      toast('Datas devem estar em DD/MM/AAAA.');
-      return null;
-    }
-    if (isNaN(parseBRL(r.valor))) {
-      toast('Valor inválido. Use formato 0,00');
-      return null;
-    }
-    return r;
-  }
-
   function renderHeader() {
     els.theadRow.innerHTML = '';
     COLS.forEach(c => {
@@ -346,12 +287,8 @@ window.addEventListener('DOMContentLoaded', () => {
       th.style.cursor = 'pointer';
       th.title = 'Clique para ordenar';
       th.addEventListener('click', () => {
-        if (sortKey === c.key) {
-          sortAsc = !sortAsc;
-        } else {
-          sortKey = c.key;
-          sortAsc = true;
-        }
+        if(sortKey === c.key) sortAsc = !sortAsc;
+        else { sortKey = c.key; sortAsc = true; }
         saveLS('sortKey', sortKey);
         saveLS('sortAsc', sortAsc);
         render();
@@ -370,33 +307,11 @@ window.addEventListener('DOMContentLoaded', () => {
     const df = normalizeDate(els.dataFim.value);
     const fs = els.filtroStatus.value;
 
-    if (q) {
-      filtered = filtered.filter(r =>
-        COLS.some(c => String(r[c.key] || '').toLowerCase().includes(q))
-      );
-    }
-
-    if (di && parseDateBR(di)) {
-      const dMin = parseDateBR(di).getTime();
-      filtered = filtered.filter(r => {
-        const d = parseDateBR(r.data);
-        return d && d.getTime() >= dMin;
-      });
-    }
-
-    if (df && parseDateBR(df)) {
-      const dMax = parseDateBR(df).getTime();
-      filtered = filtered.filter(r => {
-        const d = parseDateBR(r.data);
-        return d && d.getTime() <= dMax;
-      });
-    }
-
-    if (fs) {
-      filtered = filtered.filter(r => r.status === fs);
-    }
-
-    filtered.sort((a, b) => compare(a, b, sortKey, sortAsc));
+    if(q) filtered = filtered.filter(r => COLS.some(c => String(r[c.key] || '').toLowerCase().includes(q)));
+    if(di && parseDateBR(di)) { const dMin = parseDateBR(di).getTime(); filtered = filtered.filter(r => parseDateBR(r.data)?.getTime() >= dMin); }
+    if(df && parseDateBR(df)) { const dMax = parseDateBR(df).getTime(); filtered = filtered.filter(r => parseDateBR(r.data)?.getTime() <= dMax); }
+    if(fs) filtered = filtered.filter(r => r.status === fs);
+    filtered.sort((a,b) => compare(a,b,sortKey,sortAsc));
     return filtered;
   }
 
@@ -406,138 +321,92 @@ window.addEventListener('DOMContentLoaded', () => {
 
     rows.forEach(r => {
       const tr = document.createElement('tr');
-
       COLS.forEach(c => {
         const td = document.createElement('td');
-
-        if (c.type === 'status') {
-          const sel = document.createElement('select');
-          ['VALIDADA','REJEITADA','JUSTIFICADA','INATIVADA'].forEach(op => {
-            const option = document.createElement('option');
-            option.value = op;
-            option.textContent = op;
-            if (r.status === op) option.selected = true;
-            sel.appendChild(option);
-          });
-          sel.addEventListener('change', () => {
-            r.status = sel.value;
-            save(false);
-            updateTotals(rows);
-            drawCharts();
-          });
-          td.appendChild(sel);
-        } else {
-          td.contentEditable = true;
-          td.spellcheck = false;
-          td.textContent = r[c.key];
-          td.addEventListener('blur', () => {
-            let v = td.textContent.trim();
-
-            if (c.type === 'currency') {
-              v = normalizeBRL(v);
-              if (isNaN(parseBRL(v))) {
-                toast('Valor inválido');
-                td.textContent = r[c.key];
-                return;
-              }
-            }
-
-            if (c.type === 'date') {
-              v = normalizeDate(v);
-              if (!parseDateBR(v)) {
-                toast('Data inválida');
-                td.textContent = r[c.key];
-                return;
-              }
-            }
-
-            r[c.key] = v;
-            save(false);
-
-            if (['valor', 'status', 'data'].includes(c.key)) {
-              updateTotals(rows);
-              drawCharts();
-            }
-          });
-          td.addEventListener('keydown', (e) => {
-            // Evitar quebra de linha em cells editáveis
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              td.blur();
-            }
-          });
-        }
-
+        td.textContent = r[c.key];
         tr.appendChild(td);
       });
 
-      // Ações
       const tdActions = document.createElement('td');
       tdActions.className = 'row-actions';
-
       const btnRelatorio = document.createElement('button');
       btnRelatorio.type = 'button';
       btnRelatorio.className = 'btn secondary';
       btnRelatorio.textContent = '📄 Relatório';
-      btnRelatorio.title = 'Gerar relatório';
-      btnRelatorio.addEventListener('click', () => gerarRelatorio(r));
-
-      const btnExcluir = document.createElement('button');
-      btnExcluir.type = 'button';
-      btnExcluir.className = 'btn warning';
-      btnExcluir.textContent = '🗑️ Excluir';
-      btnExcluir.title = 'Excluir registro';
-      btnExcluir.addEventListener('click', () => excluir(r.id));
-
+      btnRelatorio.addEventListener('click', () => gerarImagemRelatorio(r));
       tdActions.appendChild(btnRelatorio);
-      tdActions.appendChild(btnExcluir);
-
       tr.appendChild(tdActions);
+
       els.tbody.appendChild(tr);
     });
 
     els.totalExibidos.textContent = rows.length;
     els.totalGeral.textContent = registros.length;
-
     updateTotals(rows);
     drawCharts();
   }
 
+  function readForm() {
+    const get = id => document.getElementById(id).value.trim();
+    const r = {};
+    for(let c of COLS){
+      r[c.key] = get(c.key);
+    }
+    r.status = 'VALIDADA';
+    for(let k in r){ if(!r[k]){ toast('Preencha todos os campos.'); return null; } }
+    return r;
+  }
+
+  function gerarImagemRelatorio(r){
+    const div = document.createElement('div');
+    div.style.fontFamily='Arial, sans-serif';
+    div.style.padding='20px';
+    div.style.width='800px';
+    div.style.background='#fff';
+    div.innerHTML = COLS.map(c => `<p><strong>${c.label}:</strong> ${escapeHtml(r[c.key])}</p>`).join('') +
+                    `<p style="margin-top:20px;font-size:12px;color:#888;">Gerado em: ${new Date().toLocaleString()}</p>`;
+    document.body.appendChild(div);
+    html2canvas(div, {scale:2}).then(canvas=>{
+      const link = document.createElement('a');
+      link.href = canvas.toDataURL('image/png');
+      link.download = `NÃO_CONFORMIDADE_SS_${r.ss}.png`;
+      link.click();
+      document.body.removeChild(div);
+    });
+  }
+
+  function limparFormulario(){
+    COLS.forEach(c=>document.getElementById(c.key).value='');
+  }
+
   function updateTotals(rows) {
-    const soma = rows.reduce((acc, r) => acc + (parseBRL(r.valor) || 0), 0);
-    const risco = rows.reduce((acc, r) => r.status !== 'VALIDADA' ? acc + (parseBRL(r.valor) || 0) : acc, 0);
+    const soma = rows.reduce((acc,r) => acc + (parseBRL(r.valor)||0), 0);
+    const risco = rows.reduce((acc,r) => r.status !== 'VALIDADA' ? acc + (parseBRL(r.valor)||0) : acc, 0);
     els.somaExibida.textContent = formatBRL(soma);
     els.valorRisco.textContent = formatBRL(risco);
   }
 
-  function excluir(id) {
-    if (!confirm('Deseja excluir este registro?')) return;
-    registros = registros.filter(r => r.id !== id);
-    save(true);
-    toast('Registro excluído!');
+  function limparTudo() {
+    if(!confirm('Deseja limpar apenas visualmente os registros?')) return;
+    registros = [];
+    render();
+    toast('Visual limpo! (Nenhum registro removido do armazenamento)');
   }
 
   function exportCSV() {
-    if (!registros.length) {
-      toast('Nada para exportar');
-      return;
-    }
+    if(!registros.length) { toast('Nada para exportar'); return; }
     const header = COLS.map(c => `"${c.label}"`).join(',') + '\n';
-    const lines = registros.map(r =>
-      COLS.map(c => `"${String(r[c.key] ?? '').replace(/"/g, '""')}"`).join(',')
-    ).join('\n');
-
-    const blob = new Blob([header + lines], {type: 'text/csv;charset=utf-8;'});
+    const lines = registros.map(r => COLS.map(c => `"${String(r[c.key]||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob([header+lines], {type:'text/csv;charset=utf-8;'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = 'registros_nao_conformidade.csv';
     a.click();
-
     toast('CSV exportado!');
   }
 
   function backupJSON() {
-    const blob = new Blob([JSON.stringify(registros, null, 2)], {type: 'application/json'});
+    const blob = new Blob([JSON.stringify(registros,null,2)], {type:'application/json'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = 'backup_registros.json';
@@ -546,204 +415,52 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   function restoreJSON() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = '.json,application/json';
-
-  input.onchange = () => {
-    const fr = new FileReader();
-    fr.onload = () => {
-      try {
-        const data = JSON.parse(fr.result);
-        if (!Array.isArray(data)) throw new Error('JSON inválido');
-
-        // Garante que cada registro tenha um ID
-        data.forEach(d => {
-          if (!d.id) d.id = Date.now().toString(36) + Math.random().toString(36).slice(2,7);
-        });
-
-        // Mescla sem duplicar IDs
-        const idsExistentes = new Set(registros.map(r => r.id));
-        const novos = data.filter(d => !idsExistentes.has(d.id));
-
-        registros = [...registros, ...novos];
-        save(true);
-        toast(`Backup restaurado! ${novos.length} novos registros adicionados.`);
-      } catch (e) {
-        alert('Falha ao carregar JSON: ' + e.message);
-      }
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,application/json';
+    input.onchange = () => {
+      const fr = new FileReader();
+      fr.onload = () => {
+        try {
+          const data = JSON.parse(fr.result);
+          if(!Array.isArray(data)) throw new Error('JSON inválido');
+          registros = registros.concat(data);
+          saveLS('registros', registros);
+          render();
+          toast('JSON carregado e mesclado!');
+        } catch(e) { alert('Falha ao carregar JSON: '+e.message); }
+      };
+      fr.readAsText(input.files[0]);
     };
-    fr.readAsText(input.files[0]);
-  };
-
-  input.click();
-}
-
-
-  function limparTudo() {
-    if (!confirm('Tem certeza que deseja apagar TODOS os registros?')) return;
-    registros = [];
-    save(true);
-    toast('Tudo limpo!');
-  }
-
-  function gerarRelatorio(r) {
-    const html = `
-      <p><strong>SS:</strong> ${escapeHtml(r.ss)}</p>
-      <p><strong>Data:</strong> ${escapeHtml(r.data)}</p>
-      <p><strong>Equipe:</strong> ${escapeHtml(r.equipe)}</p>
-      <p><strong>Endereço:</strong> ${escapeHtml(r.endereco)}</p>
-      <p><strong>Local da Execução:</strong> ${escapeHtml(r.local)}</p>
-      <p><strong>Supervisor:</strong> ${escapeHtml(r.supervisor)}</p>
-      <p><strong>Strike:</strong> ${escapeHtml(r.strike)}</p>
-      <p><strong>Serviços:</strong> ${escapeHtml(r.servicos)}</p>
-      <p><strong>Orientação do I&P:</strong> ${escapeHtml(r.orientacao)}</p>
-      <p><strong>Ordem de Serviço:</strong> ${escapeHtml(r.os)}</p>
-      <p><strong>Rejeição da Equatorial:</strong> ${escapeHtml(r.rejeicao)}</p>
-      <p><strong>Valor do Serviço:</strong> ${formatBRL(parseBRL(r.valor))}</p>
-      <p><strong>Data de Vencimento:</strong> ${escapeHtml(r.vencimento)}</p>
-      <p><strong>Referência:</strong> ${escapeHtml(r.referencia)}</p>
-      <p><strong>Status:</strong> ${escapeHtml(r.status)}</p>
-    `;
-    const win = window.open('', '_blank', 'width=600,height=600,scrollbars=yes');
-    win.document.write(`
-      <html><head><title>Relatório de Não Conformidade</title>
-      <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        p { margin: 5px 0; }
-      </style>
-      </head><body>${html}</body></html>
-    `);
-    win.document.close();
-    win.focus();
+    input.click();
   }
 
   // ======= Utils =======
-  function toast(msg) {
-    els.toast.textContent = msg;
-    els.toast.classList.add('show');
-    setTimeout(() => els.toast.classList.remove('show'), 3000);
-  }
+  function toast(msg){ els.toast.textContent = msg; els.toast.classList.add('show'); setTimeout(()=>els.toast.classList.remove('show'),3000); }
+  function saveLS(k,v){ localStorage.setItem(k,JSON.stringify(v)); }
+  function loadLS(k,d){ try{ const v = localStorage.getItem(k); return v?JSON.parse(v):d; }catch{return d;} }
 
-  function save(autoRender) {
-    saveLS('registros', registros);
-    if (autoRender) render();
-  }
+  function normalizeBRL(v){ if(!v) return ''; v=v.replace(/\s/g,'').replace(/[^\d,.-]/g,'').replace('.', '').replace(',', '.'); return v; }
+  function parseBRL(v){ if(!v) return 0; v=String(v).replace(/\./g,'').replace(',', '.'); return parseFloat(v)||0; }
+  function formatBRL(v){ return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
+  function normalizeDate(v){ if(!v) return ''; if(v.includes('-')){ const [y,m,d]=v.split('-'); if(d&&m&&y) return `${d}/${m}/${y}`; } return v; }
+  function parseDateBR(str){ if(!str) return null; const p=str.split('/'); if(p.length!==3) return null; const d=parseInt(p[0],10), m=parseInt(p[1],10)-1, y=parseInt(p[2],10); if(isNaN(d)||isNaN(m)||isNaN(y)) return null; return new Date(y,m,d); }
+  function compare(a,b,key,asc){ let va=a[key], vb=b[key]; if(key==='valor'){va=parseBRL(va); vb=parseBRL(vb);} else if(COLS.find(c=>c.key===key)?.type==='date'){ va=parseDateBR(va)?.getTime()||0; vb=parseDateBR(vb)?.getTime()||0; } else { va=String(va||'').toLowerCase(); vb=String(vb||'').toLowerCase(); } return va<vb?asc?-1:1: va>vb?asc?1:-1:0; }
+  function escapeHtml(t){ if(!t) return ''; return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
 
-  function saveLS(key, val) {
-    localStorage.setItem(key, JSON.stringify(val));
-  }
-
-  function loadLS(key, defaultVal) {
-    try {
-      const val = localStorage.getItem(key);
-      return val ? JSON.parse(val) : defaultVal;
-    } catch {
-      return defaultVal;
-    }
-  }
-
-  // Formata e normaliza valores brasileiros
-
-  function normalizeBRL(v) {
-    if (!v) return '';
-    v = v.replace(/\s/g,'').replace(/[^\d,.-]/g,'').replace('.', '').replace(',', '.');
-    return v;
-  }
-
-  function parseBRL(v) {
-    if (!v) return 0;
-    v = String(v).replace(/\./g, '').replace(',', '.');
-    return parseFloat(v) || 0;
-  }
-
-  function formatBRL(v) {
-    return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  }
-
-  function normalizeDate(v) {
-    if (!v) return '';
-    // Aceita DD/MM/AAAA ou AAAA-MM-DD e converte para DD/MM/AAAA
-    if (v.includes('-')) {
-      const [yyyy, mm, dd] = v.split('-');
-      if (dd && mm && yyyy) return `${dd}/${mm}/${yyyy}`;
-    }
-    return v;
-  }
-
-  function parseDateBR(str) {
-    // Espera DD/MM/AAAA
-    if (!str) return null;
-    const parts = str.split('/');
-    if (parts.length !== 3) return null;
-    const d = parseInt(parts[0],10);
-    const m = parseInt(parts[1],10)-1;
-    const y = parseInt(parts[2],10);
-    if (isNaN(d) || isNaN(m) || isNaN(y)) return null;
-    return new Date(y,m,d);
-  }
-
-  function compare(a, b, key, asc) {
-    let va = a[key];
-    let vb = b[key];
-
-    if (key === 'valor') {
-      va = parseBRL(va);
-      vb = parseBRL(vb);
-    } else if (COLS.find(c => c.key === key)?.type === 'date') {
-      va = parseDateBR(va)?.getTime() || 0;
-      vb = parseDateBR(vb)?.getTime() || 0;
-    } else {
-      va = String(va || '').toLowerCase();
-      vb = String(vb || '').toLowerCase();
-    }
-
-    if (va < vb) return asc ? -1 : 1;
-    if (va > vb) return asc ? 1 : -1;
-    return 0;
-  }
-
-  function escapeHtml(text) {
-    if (!text) return '';
-    return text.replace(/&/g, '&amp;')
-               .replace(/</g, '&lt;')
-               .replace(/>/g, '&gt;')
-               .replace(/"/g, '&quot;')
-               .replace(/'/g, '&#039;');
-  }
-
-  // ====== Gráficos (utilizando Chart.js se disponível) ======
-  function drawCharts() {
-    // Seu código para desenhar gráficos aqui...
-    // Exemplo simplificado: somar valores por status
-    if (typeof Chart === 'undefined') return;
-
-    const ctxStatus = document.getElementById('chartStatus')?.getContext('2d');
-    if (!ctxStatus) return;
-
-    const statusMap = { 'VALIDADA':0, 'REJEITADA':0, 'JUSTIFICADA':0, 'INATIVADA':0 };
-    registros.forEach(r => {
-      if (statusMap.hasOwnProperty(r.status)) {
-        statusMap[r.status] += parseBRL(r.valor) || 0;
-      }
-    });
-
-    if (window.statusChart) window.statusChart.destroy();
-
-    window.statusChart = new Chart(ctxStatus, {
-      type: 'pie',
-      data: {
-        labels: Object.keys(statusMap),
-        datasets: [{
-          data: Object.values(statusMap),
-          backgroundColor: ['#4caf50','#f44336','#ff9800','#9e9e9e']
-        }]
-      },
-      options: { responsive:true }
-    });
+  function drawCharts(){
+    if(typeof Chart==='undefined') return;
+    const ctxStatus=document.getElementById('chartStatus')?.getContext('2d');
+    if(!ctxStatus) return;
+    const statusMap={'VALIDADA':0,'REJEITADA':0,'JUSTIFICADA':0,'INATIVADA':0};
+    registros.forEach(r=>{ if(statusMap.hasOwnProperty(r.status)) statusMap[r.status]+=parseBRL(r.valor)||0; });
+    if(window.statusChart) window.statusChart.destroy();
+    window.statusChart=new Chart(ctxStatus,{ type:'pie', data:{ labels:Object.keys(statusMap), datasets:[{ data:Object.values(statusMap), backgroundColor:['#4caf50','#f44336','#ff9800','#9e9e9e'] }] }, options:{responsive:true} });
   }
 });
 </script>
+
+
 
 </body>
 </html>
