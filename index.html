@@ -183,7 +183,25 @@ tr:hover td{background:rgba(0,0,0,.02)}
 
 <div id="toast" class="toast">Pronto!</div>
 
-<script>
+<script type="module">
+/* Firebase (ESM via CDN) */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getDatabase, ref, push, set, get, update, remove, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+/* Config do seu projeto */
+const firebaseConfig = {
+  apiKey: "AIzaSyCSeSmkMM_4-NlLv8Js_ODwA4H372yq48k",
+  authDomain: "rnc-sgt.firebaseapp.com",
+  projectId: "rnc-sgt",
+  storageBucket: "rnc-sgt.firebasestorage.app",
+  messagingSenderId: "500336948308",
+  appId: "1:500336948308:web:a6448b9141974f542ce9c1",
+  measurementId: "G-LB9EQPJRQ1",
+  databaseURL: "https://rnc-sgt-default-rtdb.firebaseio.com/"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+
 window.addEventListener('DOMContentLoaded', () => {
   // ======= COLUNAS (ordem fixa) =======
   const COLS = [
@@ -205,8 +223,8 @@ window.addEventListener('DOMContentLoaded', () => {
   ];
 
   // ======= ESTADO =======
-  let registros = loadLS('registros', []);
-  let sortKey = loadLS('sortKey', 'data');
+  let registros = [];                        // agora somente em memória
+  let sortKey = loadLS('sortKey', 'data');   // preferências continuam no localStorage
   let sortAsc = loadLS('sortAsc', true);
 
   const els = {
@@ -234,7 +252,16 @@ window.addEventListener('DOMContentLoaded', () => {
   els.filtroStatus.value = loadLS('filtroStatus', '');
 
   renderHeader();
-  render();
+
+  // ======= Firebase: assinar alterações em tempo real =======
+  const dbRef = ref(db, 'registros');
+  onValue(dbRef, snap => {
+    const val = snap.val() || {};
+    registros = Object.entries(val).map(([id, r]) => ({ id, ...r }));
+    // garante chaves faltantes para evitar undefined
+    registros.forEach(r => COLS.forEach(c => { if(!(c.key in r)) r[c.key] = ''; }));
+    render();
+  });
 
   // ======= Eventos toolbar =======
   document.getElementById('btnExportCsv').addEventListener('click', exportCSV);
@@ -248,16 +275,21 @@ window.addEventListener('DOMContentLoaded', () => {
   els.chkTema.addEventListener('change', () => { document.body.classList.toggle('dark', els.chkTema.checked); saveLS('tema', els.chkTema.checked?'dark':'light'); });
 
   // ======= Submit do formulário =======
-  els.form.addEventListener('submit', (e) => {
+  els.form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const r = readForm();
     if(!r) return;
-    registros.push(r);
-    saveLS('registros', registros);
-    render();
-    if(els.chkAutoRelatorio.checked) gerarImagemRelatorio(r);
-    limparFormulario();
-    toast('Registro salvo' + (els.chkAutoRelatorio.checked?' e relatório gerado!':'!'));
+
+    try{
+      const newRef = push(dbRef);
+      await set(newRef, r);
+      if(els.chkAutoRelatorio.checked) gerarImagemRelatorio(r);
+      limparFormulario();
+      toast('Registro salvo' + (els.chkAutoRelatorio.checked?' e relatório gerado!':'!'));
+    }catch(err){
+      console.error(err);
+      toast('Falha ao salvar no Firebase.');
+    }
   });
 
   // ======= Header com sort =======
@@ -317,35 +349,38 @@ window.addEventListener('DOMContentLoaded', () => {
       });
 
       const tdA = document.createElement('td');
-tdA.className = 'row-actions';
+      tdA.className = 'row-actions';
 
-// Botão relatório
-const btnRel = document.createElement('button');
-btnRel.type = 'button';
-btnRel.className = 'btn secondary';
-btnRel.textContent = '📄 Relatório';
-btnRel.addEventListener('click', () => gerarImagemRelatorio(r));
-tdA.appendChild(btnRel);
+      // Botão relatório
+      const btnRel = document.createElement('button');
+      btnRel.type = 'button';
+      btnRel.className = 'btn secondary';
+      btnRel.textContent = '📄 Relatório';
+      btnRel.addEventListener('click', () => gerarImagemRelatorio(r));
+      tdA.appendChild(btnRel);
 
-// Select de status
-const selStatus = document.createElement('select');
-['VALIDADA','REJEITADA','JUSTIFICADA','INATIVADA'].forEach(st => {
-  const opt = document.createElement('option');
-  opt.value = st;
-  opt.textContent = st;
-  if (r.status === st) opt.selected = true;
-  selStatus.appendChild(opt);
-});
-selStatus.addEventListener('change', () => {
-  r.status = selStatus.value;
-  saveLS('registros', registros);
-  render();
-});
-tdA.appendChild(selStatus);
+      // Select de status (edita direto no Firebase)
+      const selStatus = document.createElement('select');
+      ['VALIDADA','REJEITADA','JUSTIFICADA','INATIVADA'].forEach(st => {
+        const opt = document.createElement('option');
+        opt.value = st;
+        opt.textContent = st;
+        if (r.status === st) opt.selected = true;
+        selStatus.appendChild(opt);
+      });
+      selStatus.addEventListener('change', async () => {
+        try{
+          await update(ref(db, `registros/${r.id}`), { status: selStatus.value });
+          toast('Status atualizado!');
+        }catch(err){
+          console.error(err);
+          toast('Falha ao atualizar status.');
+          selStatus.value = r.status; // rollback visual
+        }
+      });
+      tdA.appendChild(selStatus);
 
-tr.appendChild(tdA);
-
-
+      tr.appendChild(tdA);
       els.tbody.appendChild(tr);
     });
 
@@ -357,7 +392,6 @@ tr.appendChild(tdA);
 
   // ======= Leitura/validação do form =======
   function readForm(){
-    const get = id => document.getElementById(id).value.trim();
     const r = {};
     for(const c of COLS){
       const el = document.getElementById(c.key);
@@ -413,7 +447,6 @@ tr.appendChild(tdA);
       a.href = dataUrl;
       a.download = `NAO_CONFORMIDADE_SS_${sanitizeFile(r.ss)}.png`;
       a.click();
-      // opcional: abrir em nova aba para visualização
       window.open(dataUrl, '_blank');
       document.body.removeChild(div);
     });
@@ -429,13 +462,16 @@ tr.appendChild(tdA);
 
   // ======= Limpar =======
   function limparFormulario(){ COLS.forEach(c=>{ const el=document.getElementById(c.key); if(el) el.value=''; }); }
-  function limparTudo(){
-    const opt = confirm('Apagar TUDO do armazenamento local e limpar a tela?');
+  async function limparTudo(){
+    const opt = confirm('Apagar TUDO do BANCO DE DADOS? É SÉRIO ISSO🤨!!! ISSO SÓ DEVE SER FEITO UMA VEZ POR MÊS E SE JÁ TIVER EXPORTADO ALGUM ARQUIVO DE RECUPERAÇÃO!');
     if(!opt) return;
-    registros = [];
-    saveLS('registros', registros);
-    render();
-    toast('Todos os registros foram removidos.');
+    try{
+      await remove(dbRef);
+      toast('Todos os registros foram removidos.');
+    }catch(err){
+      console.error(err);
+      toast('Falha ao remover registros.');
+    }
   }
 
   // ======= Exportações =======
@@ -455,14 +491,20 @@ tr.appendChild(tdA);
     input.type = 'file'; input.accept = '.json,application/json';
     input.onchange = () => {
       const fr = new FileReader();
-      fr.onload = () => {
+      fr.onload = async () => {
         try{
           const data = JSON.parse(fr.result);
           if(!Array.isArray(data)) throw new Error('JSON inválido');
-          registros = registros.concat(data);
-          saveLS('registros', registros);
-          render();
-          toast('JSON carregado e mesclado!');
+
+          // Insere cada item no Firebase (gera novas chaves)
+          for(const item of data){
+            const r = {};
+            COLS.forEach(c => { r[c.key] = (item[c.key] ?? '').toString(); });
+            // validações básicas (mantém comportamento)
+            if(!r.data || !r.vencimento || isNaN(parseBRL(r.valor))) continue;
+            await set(push(dbRef), r);
+          }
+          toast('JSON carregado e inserido no BANCO DE DADOS!🚀😎');
         }catch(e){ alert('Falha ao carregar JSON: '+e.message); }
       };
       fr.readAsText(input.files[0]);
