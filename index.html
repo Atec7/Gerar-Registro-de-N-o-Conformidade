@@ -60,6 +60,19 @@ tr:hover td{background:rgba(0,0,0,.02)}
 #relatorio .logo{text-align:center;margin-bottom:12px}
 #relatorio h2{text-align:center;margin:8px 0 14px}
 #relatorio .rodape{text-align:center;margin-top:18px;padding-top:8px;border-top:1px solid #cbd5e1;font-size:12px}
+  textarea {
+  border: 1px solid var(--border);
+  background: var(--card);
+  width: 100%;
+  color: var(--fg);
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 14px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .04) inset;
+  resize: vertical;
+  min-height: 60px;
+}
+
 </style>
 </head>
 <body>
@@ -101,15 +114,16 @@ tr:hover td{background:rgba(0,0,0,.02)}
     </select>
   </div>
   <div class="form-row">
-    <input id="strike" placeholder="Strike" required>
-    <input id="servicos" placeholder="Serviços" required>
-    <input id="orientacao" placeholder="Orientação do I&P" required>
-  </div>
-  <div class="form-row">
-    <input id="os" placeholder="Ordem de Serviço" required>
-    <input id="rejeicao" placeholder="Rejeição da Equatorial" required>
-    <input id="valor" placeholder="Valor do Serviço (ex: 1234,56)" required>
-  </div>
+  <input id="strike" placeholder="Strike" required>
+  <input id="servicos" placeholder="Serviços" required>
+  <textarea id="orientacao" placeholder="Orientação do I&P" required></textarea>
+</div>
+<div class="form-row">
+  <textarea id="os" placeholder="Ordem de Serviço" required></textarea>
+  <textarea id="rejeicao" placeholder="Rejeição da Equatorial" required></textarea>
+  <input id="valor" placeholder="Valor do Serviço (ex: 1234,56)" required>
+</div>
+
   <div class="form-row">
     <input id="vencimento" placeholder="Data de Vencimento (DD/MM/AAAA)" required>
     <input id="referencia" placeholder="Nº Poste/Trafo/Posto/Referência" required>
